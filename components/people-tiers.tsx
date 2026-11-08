@@ -3,8 +3,9 @@
 import { Plus, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect, useOptimistic, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { useEffect, useLayoutEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { movePerson } from "@/app/(app)/people/actions";
+import { useIsDesk } from "@/components/use-is-desk";
 import { usePressDrag, type Point } from "@/components/use-press-drag";
 import { EmojiBadge } from "@/components/emoji-badge";
 import { firstName, initials } from "@/lib/names";
@@ -19,22 +20,9 @@ const at = (x: number, y: number) => `translate3d(${x}px, ${y}px, 0)`;
 // bubble when the panel narrows the arcs) never waits long to show.
 const stagger = (i: number) => Math.min(i * 25, 250);
 const BAND_FILLS = ["fill-band-1", "fill-band-2", "fill-band-3", "fill-band-4"];
-const DESK_QUERY = "(min-width: 1024px)"; // matches the `desk` breakpoint in globals.css
 // Phones: the Prospects band sits above the screen, this much of it peeking under the header.
 // Scroll up to see the rest.
 const PEEK = 115;
-
-function useIsDesk() {
-  return useSyncExternalStore(
-    (onChange) => {
-      const mq = window.matchMedia(DESK_QUERY);
-      mq.addEventListener("change", onChange);
-      return () => mq.removeEventListener("change", onChange);
-    },
-    () => window.matchMedia(DESK_QUERY).matches,
-    () => false,
-  );
-}
 
 type Drag = { person: LayoutPerson; size: number; x: number; y: number; tier?: number };
 

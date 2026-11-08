@@ -50,8 +50,10 @@ export const entryPeople = sqliteTable(
 export const places = sqliteTable("places", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id"),
-  name: text("name").notNull(),
-  area: text("area").notNull().default(""),
+  name: text("name").notNull(), // the place's own name from the address search, like "Cal Anderson Park"
+  alias: text("alias").notNull().default(""), // what you call it, like "Sam's place"; shown instead of the name
+  address: text("address").notNull().default(""),
+  area: text("area").notNull().default(""), // neighbourhood or city, for a short line under the name
   lat: real("lat").notNull(),
   lng: real("lng").notNull(),
   createdAt: createdAt(),
