@@ -240,8 +240,10 @@ export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, o
   useEffect(() => {
     if (!map || !places.length || framed.current === placeIds) return;
     const first = framed.current === undefined;
-    framed.current = placeIds;
+    // With a place selected the map follows it; frame once it's let go, as when a form closes back
+    // through ?place=3 to /places.
     if (!first && selectedId) return;
+    framed.current = placeIds;
     const pad = { top: 120 + (padding?.top ?? 0), bottom: 60 + (padding?.bottom ?? 0), left: 60, right: 60 };
     const city = cityPoints(places);
     if (city.length === 1 || preview) map.jumpTo({ center: [city[0].lng, city[0].lat], zoom: preview ? 15 : CLOSE_ZOOM });

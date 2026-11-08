@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LevelLink } from "@/components/nav-stack";
 import { TemoryMark } from "@/components/temory-mark";
 
 /** Shown for a URL that matches nothing, or a person or moment that's gone, inside the app's nav. */
@@ -10,9 +10,9 @@ export default function NotFound() {
       <p className="mt-2 max-w-[19rem] text-sm leading-normal text-muted desk:max-w-[21rem]">
         This page doesn&apos;t exist. If it was a person or a moment, it may have been deleted.
       </p>
-      <Link href="/people" className="mt-6 rounded-full bg-accent px-6 py-3 text-sm font-medium text-on-accent transition hover:brightness-110 active:scale-[0.98]">
+      <LevelLink href="/people" className="mt-6 rounded-full bg-accent px-6 py-3 text-sm font-medium text-on-accent transition hover:brightness-110 active:scale-[0.98]">
         Go to people
-      </Link>
+      </LevelLink>
     </div>
   );
 }

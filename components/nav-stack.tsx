@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useEffect, useSyncExternalStore } from "react";
+import { Suspense, useEffect } from "react";
+import { useIsDesk } from "@/components/use-is-desk";
 import { type Arrival, arrive, close as closePlan, level, type Plan } from "@/lib/nav-stack";
 
 // The browser's Back should only undo pages that sit on top of another: a profile over People on a
@@ -28,7 +29,9 @@ function track(path: string, router: Router) {
 
   const next = afterPop;
   afterPop = null;
-  if (next?.replace && next.replace !== path) {
+  // The stack holds paths without queries, so compare the full address: closing to /places from an
+  // entry that was /places?place=3 still has to drop the query.
+  if (next?.replace && next.replace !== path + window.location.search) {
     incoming = "replace";
     router.replace(next.replace);
   } else if (next?.refresh) router.refresh();
@@ -75,7 +78,8 @@ export function goLevel(router: Router, href: string) {
  * here; otherwise as if `href` were the bottom of the app's history. `refresh` refetches the page landed on.
  */
 export function close(router: Router, href: string, { refresh = false } = {}) {
-  follow(router, closePlan(stack, href), refresh);
+  const plan = closePlan(stack, href);
+  follow(router, { ...plan, replace: plan.replace ?? href }, refresh);
 }
 
 /** Once a form's action reports where it's done, closes the form to there, refetching what's there. */
@@ -85,14 +89,6 @@ export function useCloseOnDone(state: { done?: string }) {
     if (state.done) close(router, state.done, { refresh: true });
   }, [state, router]);
 }
-
-const DESK = "(width >= 1024px)"; // --breakpoint-desk
-function subscribeDesk(onChange: () => void) {
-  const query = window.matchMedia(DESK);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-const isDesk = () => window.matchMedia(DESK).matches;
 
 type LinkProps = Omit<React.ComponentProps<typeof Link>, "href" | "onNavigate" | "replace"> & { href: string };
 
@@ -113,7 +109,7 @@ export function LevelLink({ href, ...props }: LinkProps) {
 
 /** Opens a page over the list on phones, or in the panel beside it on desktop, swapping what's there. */
 export function PanelLink({ href, ...props }: LinkProps) {
-  const desk = useSyncExternalStore(subscribeDesk, isDesk, () => false);
+  const desk = useIsDesk();
   return (
     <Link
       href={href}
