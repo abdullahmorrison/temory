@@ -33,8 +33,7 @@ const locked = (s: Picked, id: number): Picked => ({ ...s, linked: s.linked.filt
 const noSubscribe = () => () => {};
 
 export function MomentForm({ action, people, activities, defaults, closeHref }: Props) {
-  const [state, formAction, pending] = useActionState(action, {});
-  useCloseOnDone(state);
+  const [state, formAction, pending] = useActionState(useCloseOnDone(action), {});
   // Today comes from the viewer's clock, so it's read in the browser, never at build time.
   const today = useSyncExternalStore(noSubscribe, localToday, () => "");
   const [picked, setPicked] = useState<string | null>(defaults?.date ?? null);

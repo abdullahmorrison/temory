@@ -25,8 +25,7 @@ type Props = {
 
 /** An address picked from a search, what you call the place, and who goes there. */
 export function PlaceForm({ action, people, submitLabel, placeId, around, defaults }: Props) {
-  const [state, formAction, pending] = useActionState(action, {});
-  useCloseOnDone(state);
+  const [state, formAction, pending] = useActionState(useCloseOnDone(action), {});
   const [address, setAddress] = useState<AddressResult | null>(defaults ?? null);
   const [chosen, setChosen] = useState(defaults?.personIds ?? []);
 
