@@ -1,51 +1,38 @@
 "use client";
 
-import { SmilePlus } from "lucide-react";
 import { useActionState, useState } from "react";
 import type { PersonFormState } from "@/app/(app)/people/actions";
 import { EmojiBadge } from "@/components/emoji-badge";
 import { SectionLabel } from "@/components/section-label";
-import { lastEmoji } from "@/lib/emoji";
+import { TypePicker } from "@/components/type-picker";
 import { initials } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
+import type { RelationshipType } from "@/lib/relationship-types";
 import { NEW_PERSON_CLOSENESS, TIERS } from "@/lib/tiers";
-
-// Quick picks for where you know someone from; any other emoji can be typed.
-const SUGGESTED = ["💼", "🎓", "🏡", "🏋️", "🤝", "💬", "🙏", "✈️", "🏠", "❤️", "⚽", "🎉", "☕", "🧗", "📚", "🐕"];
 
 type Props = {
   action: (prev: PersonFormState, form: FormData) => Promise<PersonFormState>;
   submitLabel: string;
   color: number; // the person's avatar color, for the preview
-  defaults?: { name: string; closeness: number; emoji: string; notes: string };
+  types: RelationshipType[];
+  defaults?: { name: string; closeness: number; typeId: number | null; notes: string };
 };
 
-export function PersonForm({ action, submitLabel, color, defaults }: Props) {
+export function PersonForm({ action, submitLabel, color, types, defaults }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
   const [name, setName] = useState(defaults?.name ?? "");
-  const [emoji, setEmoji] = useState(defaults?.emoji ?? "");
-  const [picking, setPicking] = useState(false);
+  const [type, setType] = useState(types.find((t) => t.id === defaults?.typeId) ?? null);
   const c = personColor(color);
   return (
     <form action={formAction} className="flex flex-col gap-8">
       <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => setPicking(!picking)}
-          aria-label={emoji ? `Change emoji ${emoji}` : "Add an emoji"}
-          aria-expanded={picking}
+        <span
+          aria-hidden
           className={`relative flex size-16 shrink-0 items-center justify-center rounded-full font-serif text-[1.375rem] shadow-(--shadow-avatar) ring-2 ring-halo ${c.fill} ${c.ink}`}
         >
           {initials(name)}
-          {emoji ? (
-            <EmojiBadge emoji={emoji} />
-          ) : (
-            <span className="absolute -right-0.75 -bottom-0.75 flex size-6 items-center justify-center rounded-full border border-dashed border-muted bg-paper text-muted">
-              <SmilePlus size="0.875rem" />
-            </span>
-          )}
-        </button>
-        <input type="hidden" name="emoji" value={emoji} />
+          <EmojiBadge emoji={type?.emoji ?? ""} />
+        </span>
         <input
           name="name"
           required
@@ -58,15 +45,11 @@ export function PersonForm({ action, submitLabel, color, defaults }: Props) {
         />
       </div>
 
-      {picking && (
-        <EmojiPicker
-          current={emoji}
-          onPick={(e) => {
-            setEmoji(e);
-            setPicking(false);
-          }}
-        />
-      )}
+      <div className="flex flex-col gap-3">
+        <SectionLabel as="span">Relationship type</SectionLabel>
+        <TypePicker types={types} value={type} onChange={setType} />
+        <input type="hidden" name="typeId" value={type?.id ?? ""} />
+      </div>
 
       <fieldset className="flex flex-col gap-3">
         <SectionLabel as="legend" className="mb-3">
@@ -113,41 +96,3 @@ export function PersonForm({ action, submitLabel, color, defaults }: Props) {
   );
 }
 
-/** Quick picks, a field for any other emoji, and a way to clear it. */
-function EmojiPicker({ current, onPick }: { current: string; onPick: (emoji: string) => void }) {
-  return (
-    <div className="-mt-4 flex flex-col gap-3 rounded-2xl bg-surface p-3">
-      <div className="grid grid-cols-8 gap-1">
-        {SUGGESTED.map((e) => (
-          <button
-            key={e}
-            type="button"
-            onClick={() => onPick(e)}
-            aria-pressed={e === current}
-            className={`flex aspect-square items-center justify-center rounded-lg text-xl ${e === current ? "bg-paper ring-[1.5px] ring-accent" : "hover:bg-paper"}`}
-          >
-            {e}
-          </button>
-        ))}
-      </div>
-      <div className="flex items-center gap-3 px-1">
-        <input
-          autoComplete="off"
-          placeholder="Or type any emoji"
-          aria-label="Type any emoji"
-          onChange={(e) => {
-            const typed = lastEmoji(e.target.value);
-            if (typed) onPick(typed);
-          }}
-          onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-          className="min-w-0 flex-1 bg-transparent text-[0.9375rem] outline-none placeholder:text-muted"
-        />
-        {current && (
-          <button type="button" onClick={() => onPick("")} className="text-sm text-muted hover:text-ink">
-            Remove
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { openDb } from "./db";
 import { entries, entryPeople } from "@/db/schema";
 import { createPerson, deletePerson, getPerson, listPeople, listTier, moveToTier, updatePerson } from "./people";
+import { listTypes } from "./relationship-types";
 import { NEW_PERSON_CLOSENESS } from "./tiers";
 
 describe("createPerson", () => {
@@ -11,12 +12,14 @@ describe("createPerson", () => {
     expect(new Set(colors).size).toBe(6);
   });
 
-  it("keeps one emoji and rejects anything else", () => {
+  it("shows the emoji of the person's relationship type as their badge", () => {
     const db = openDb(":memory:");
-    expect(createPerson(db, { name: "Sam", emoji: " ⚽ " }).emoji).toBe("⚽");
-    expect(createPerson(db, { name: "Priya" }).emoji).toBe("");
-    expect(() => createPerson(db, { name: "Jo", emoji: "⚽☕" })).toThrow("single emoji");
-    expect(() => createPerson(db, { name: "Jo", emoji: "work" })).toThrow("single emoji");
+    const coworker = listTypes(db).find((t) => t.name === "Coworker")!;
+    const sam = createPerson(db, { name: "Sam", typeId: coworker.id });
+    const priya = createPerson(db, { name: "Priya" });
+    expect(getPerson(db, sam.id)?.emoji).toBe("💼");
+    expect(getPerson(db, priya.id)?.emoji).toBe("");
+    expect(listPeople(db).map((p) => [p.name, p.emoji])).toEqual([["Priya", ""], ["Sam", "💼"]]);
   });
 
   it("puts new people in the outermost tier and trims the name", () => {

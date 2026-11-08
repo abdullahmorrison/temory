@@ -6,10 +6,11 @@ import { Panel } from "@/components/panel";
 import { PersonForm } from "@/components/person-form";
 import { getDb } from "@/lib/db";
 import { nextPersonColor } from "@/lib/people";
+import { listTypes } from "@/lib/relationship-types";
 
 async function Form() {
   await connection(); // read the database per request, not at build time
-  return <PersonForm action={addPerson} submitLabel="Add person" color={nextPersonColor(getDb())} />;
+  return <PersonForm action={addPerson} submitLabel="Add person" color={nextPersonColor(getDb())} types={listTypes(getDb())} />;
 }
 
 export default function NewPersonPage() {

@@ -4,13 +4,23 @@ import { index, integer, primaryKey, real, sqliteTable, text } from "drizzle-orm
 // user_id stays empty until there are accounts; it saves a data migration when the app goes public.
 const createdAt = () => text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`);
 
+// What someone is to you, like "Work friend". Presets come with the app; the rest are yours.
+export const relationshipTypes = sqliteTable("relationship_types", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id"),
+  name: text("name").notNull(),
+  emoji: text("emoji").notNull(), // shown as a badge on the avatars of people of this type
+  preset: integer("preset", { mode: "boolean" }).notNull().default(false),
+  createdAt: createdAt(),
+});
+
 export const people = sqliteTable("people", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id"),
   name: text("name").notNull(),
   closeness: integer("closeness").notNull(), // 1 = closest; see lib/tiers.ts
   color: integer("color").notNull(), // index into lib/person-colors.ts
-  emoji: text("emoji").notNull().default(""), // one emoji for where you know them from, or ""
+  typeId: integer("type_id").references(() => relationshipTypes.id, { onDelete: "set null" }),
   notes: text("notes").notNull().default(""),
   createdAt: createdAt(),
 });

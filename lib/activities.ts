@@ -1,7 +1,8 @@
 import { asc, count, eq, inArray } from "drizzle-orm";
-import { activities, activityPeople, entryActivities, people } from "@/db/schema";
+import { activities, activityPeople, entryActivities, people, relationshipTypes } from "@/db/schema";
 import { isActivityIcon } from "@/lib/activity-icons";
 import type { Db } from "@/lib/db";
+import { personEmoji, withType } from "@/lib/people";
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
@@ -55,9 +56,10 @@ function peopleFor(db: Db, activityIds: number[]) {
   const byActivity = new Map<number, { id: number; name: string; color: number; emoji: string; closeness: number }[]>();
   if (!activityIds.length) return byActivity;
   const rows = db
-    .select({ activityId: activityPeople.activityId, id: people.id, name: people.name, color: people.color, emoji: people.emoji, closeness: people.closeness })
+    .select({ activityId: activityPeople.activityId, id: people.id, name: people.name, color: people.color, emoji: personEmoji, closeness: people.closeness })
     .from(activityPeople)
     .innerJoin(people, eq(people.id, activityPeople.personId))
+    .leftJoin(relationshipTypes, withType)
     .where(inArray(activityPeople.activityId, activityIds))
     .orderBy(asc(people.closeness), asc(people.name))
     .all();

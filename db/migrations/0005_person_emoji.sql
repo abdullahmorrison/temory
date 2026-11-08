@@ -1,1 +1,0 @@
-ALTER TABLE `people` ADD `emoji` text DEFAULT '' NOT NULL;
