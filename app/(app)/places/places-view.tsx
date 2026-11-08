@@ -1,19 +1,20 @@
 "use client";
 
-import { ChevronRight, MapPin, Plus } from "lucide-react";
+import { ChevronRight, LocateFixed, MapPin, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { EmojiBadge } from "@/components/emoji-badge";
-import { PlacesMap, type MapPlace } from "@/components/places-map";
+import { PlacesMap, type MapPlace, type PlacesMapHandle } from "@/components/places-map";
 import { useIsDesk } from "@/components/use-is-desk";
 import { initials } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
 import type { Place } from "@/lib/places";
 import { tierLabel } from "@/lib/tiers";
 
-// Phones: the sheet covers the bottom of the map, so centring on a place keeps this much clear.
+// Phones: the header covers the top of the map, and an open sheet its bottom, so centring keeps these clear.
 const SHEET_ROOM = { top: 110, bottom: 340 };
+const HEADER_ROOM = { top: 110, bottom: 0 };
 
 /** The selected place lives in the URL (?place=3), so the list and the map agree and Back undoes it. */
 function useSelection() {
@@ -26,13 +27,33 @@ function useSelection() {
 const toMap = (places: Place[]): MapPlace[] => places.map((p) => ({ id: p.id, title: p.title, count: p.people.length, lat: p.lat, lng: p.lng }));
 const summary = (p: Place) => [p.area, `${p.people.length} ${p.people.length === 1 ? "person" : "people"}`].filter(Boolean).join("  ·  ");
 
+/** Centres the map on you; the blue dot shows once the browser may say where you are. */
+function LocateButton({ map, className }: { map: React.RefObject<PlacesMapHandle | null>; className: string }) {
+  return (
+    <button
+      type="button"
+      onClick={() => map.current?.locate()}
+      aria-label="Show where I am"
+      className={`flex size-10 items-center justify-center rounded-full border border-line bg-paper text-[#1d7ee8] shadow-(--shadow-avatar) transition-colors hover:border-muted ${className}`}
+    >
+      <LocateFixed size="1.25rem" />
+    </button>
+  );
+}
+
 /** Desktop: the map beside the list or form. Phones show their own map on the Places page instead. */
 export function DeskMap({ places }: { places: Place[] }) {
   const desk = useIsDesk();
   const [selected, select] = useSelection();
   const pins = useMemo(() => toMap(places), [places]);
+  const map = useRef<PlacesMapHandle>(null);
   if (!desk) return null;
-  return <PlacesMap places={pins} selectedId={selected} onSelect={select} onBackground={() => select()} className="h-dvh min-w-0 flex-1" />;
+  return (
+    <div className="relative h-dvh min-w-0 flex-1">
+      <PlacesMap ref={map} places={pins} selectedId={selected} onSelect={select} onBackground={() => select()} className="size-full" />
+      <LocateButton map={map} className="absolute right-6 bottom-12" />
+    </div>
+  );
 }
 
 /** The Places tab: the list on desktop; on phones a full-screen map with the selected place in a sheet. */
@@ -41,6 +62,7 @@ export function PlacesHome({ places }: { places: Place[] }) {
   const [selectedId, select] = useSelection();
   const pins = useMemo(() => toMap(places), [places]);
   const selected = places.find((p) => p.id === selectedId);
+  const map = useRef<PlacesMapHandle>(null);
 
   if (desk) return <PlaceList places={places} selectedId={selectedId} />;
   return (
@@ -48,11 +70,12 @@ export function PlacesHome({ places }: { places: Place[] }) {
       {/* MapLibre makes its own box position: relative, so a wrapper does the filling. */}
       <div className="absolute inset-0">
         <PlacesMap
+          ref={map}
           places={pins}
           selectedId={selectedId}
           onSelect={select}
           onBackground={() => select()}
-          padding={SHEET_ROOM}
+          padding={selected ? SHEET_ROOM : HEADER_ROOM}
           // MapLibre's own styles sit outside Tailwind's layers, so moving its credit below the header needs !.
           credit="top-right"
           className="size-full [&_.maplibregl-ctrl-top-right]:top-30!"
@@ -80,20 +103,25 @@ export function PlacesHome({ places }: { places: Place[] }) {
           </Link>
         </div>
       )}
+      {/* The locate button rides on top of the sheet when one is open, else sits above the tab bar. */}
+      {!selected && <LocateButton map={map} className="absolute right-7 bottom-[calc(max(env(safe-area-inset-bottom),12px)+76px)]" />}
       {selected && (
-        <section className="absolute inset-x-0 bottom-0 z-10 max-h-[60dvh] overflow-y-auto rounded-t-3xl bg-paper px-7 pt-3 pb-[calc(max(env(safe-area-inset-bottom),12px)+88px)] shadow-(--shadow-pop)">
-          <div className="mx-auto mb-5 h-1 w-9 rounded-full bg-line" />
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <h2 className="truncate text-[1.375rem] font-medium">{selected.title}</h2>
-              <p className="mt-0.5 text-[0.8125rem] text-muted">{summary(selected)}</p>
+        <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-end">
+          <LocateButton map={map} className="mr-7 mb-3.5" />
+          <section className="max-h-[60dvh] w-full overflow-y-auto rounded-t-3xl bg-paper px-7 pt-3 pb-[calc(max(env(safe-area-inset-bottom),12px)+88px)] shadow-(--shadow-pop)">
+            <div className="mx-auto mb-5 h-1 w-9 rounded-full bg-line" />
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h2 className="truncate text-[1.375rem] font-medium">{selected.title}</h2>
+                <p className="mt-0.5 text-[0.8125rem] text-muted">{summary(selected)}</p>
+              </div>
+              <Link href={`/places/${selected.id}/edit`} className="mt-1 text-sm text-muted hover:text-ink">
+                Edit
+              </Link>
             </div>
-            <Link href={`/places/${selected.id}/edit`} className="mt-1 text-sm text-muted hover:text-ink">
-              Edit
-            </Link>
-          </div>
-          <PlacePeople place={selected} />
-        </section>
+            <PlacePeople place={selected} />
+          </section>
+        </div>
       )}
     </div>
   );

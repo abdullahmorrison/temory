@@ -2,7 +2,7 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Map as MapLibre, Marker } from "maplibre-gl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { locateHomeArea, savedHomeArea } from "@/lib/home-area";
 
 // OpenFreeMap: free, no key, no limits. Its style carries the credit the map has to show.
@@ -11,6 +11,8 @@ const CLOSE_ZOOM = 14;
 const CITY_ZOOM = 11;
 
 export type MapPlace = { id: number; title: string; count: number; lat: number; lng: number };
+/** `locate` centres the map on you, asking where you are if the browser hasn't been told yet. */
+export type PlacesMapHandle = { locate: () => void };
 
 type Props = {
   places: MapPlace[];
@@ -25,10 +27,11 @@ type Props = {
   /** Where the map's credit goes: phones keep it at the top, clear of the sheet. */
   credit?: "top-right" | "bottom-right";
   className?: string;
+  ref?: Ref<PlacesMapHandle>;
 };
 
 /** A map of places as numbered pins (how many people go there), the selected one in the accent colour. */
-export function PlacesMap({ places, selectedId, onSelect, onBackground, preview, padding, credit = "bottom-right", className = "" }: Props) {
+export function PlacesMap({ places, selectedId, onSelect, onBackground, preview, padding, credit = "bottom-right", className = "", ref }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibre>();
   const markers = useRef<Marker[]>([]);
@@ -61,6 +64,56 @@ export function PlacesMap({ places, selectedId, onSelect, onBackground, preview,
       live?.remove();
     };
   }, [preview, credit]);
+
+  // You, as a blue dot: shown once the browser may say where you are, and followed as you move.
+  const [you, setYou] = useState<{ lat: number; lng: number }>();
+  const watching = useRef<number>(undefined);
+  const flyToYou = useRef(false);
+  const watch = () => {
+    if (watching.current !== undefined || !("geolocation" in navigator)) return;
+    watching.current = navigator.geolocation.watchPosition(
+      ({ coords }) => setYou({ lat: coords.latitude, lng: coords.longitude }),
+      () => {
+        watching.current = undefined;
+        flyToYou.current = false;
+      },
+      { enableHighAccuracy: true },
+    );
+  };
+  useEffect(() => {
+    if (preview) return;
+    navigator.permissions?.query({ name: "geolocation" }).then((status) => status.state === "granted" && watch(), () => {});
+    return () => {
+      if (watching.current !== undefined) navigator.geolocation.clearWatch(watching.current);
+      watching.current = undefined;
+    };
+  }, [preview]);
+  useImperativeHandle(ref, () => ({
+    locate() {
+      if (you && map) map.easeTo({ center: [you.lng, you.lat], zoom: Math.max(map.getZoom(), CLOSE_ZOOM - 1), padding: { top: padding?.top ?? 0, bottom: padding?.bottom ?? 0, left: 0, right: 0 } });
+      else {
+        flyToYou.current = true;
+        watch();
+      }
+    },
+  }));
+  const youMarker = useRef<Marker>(undefined);
+  useEffect(() => {
+    if (!map || !you) return;
+    let cancelled = false;
+    import("maplibre-gl").then(({ default: maplibre }) => {
+      if (cancelled) return;
+      youMarker.current ??= new maplibre.Marker({ element: youDot() }).setLngLat([you.lng, you.lat]).addTo(map);
+      youMarker.current.setLngLat([you.lng, you.lat]);
+      if (flyToYou.current) {
+        flyToYou.current = false;
+        map.easeTo({ center: [you.lng, you.lat], zoom: Math.max(map.getZoom(), CLOSE_ZOOM - 1), padding: { top: padding?.top ?? 0, bottom: padding?.bottom ?? 0, left: 0, right: 0 } });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [map, you, padding]);
 
   // Pins, redrawn whenever the places or the selection change.
   useEffect(() => {
@@ -111,6 +164,15 @@ export function PlacesMap({ places, selectedId, onSelect, onBackground, preview,
   return <div ref={box} className={`bg-surface ${className}`} />;
 }
 
+/** The usual blue "you are here" dot with a soft halo, under the pins. */
+function youDot() {
+  const el = document.createElement("div");
+  el.className = "pointer-events-none relative size-9";
+  el.setAttribute("aria-hidden", "true");
+  el.innerHTML = `<span class="absolute inset-0 rounded-full bg-[#1d7ee8]/20"></span><span class="absolute inset-2.5 rounded-full border-[2.5px] border-white bg-[#1d7ee8] shadow-sm"></span>`;
+  return el;
+}
+
 function bounds(places: MapPlace[]): [[number, number], [number, number]] {
   const lngs = places.map((p) => p.lng);
   const lats = places.map((p) => p.lat);
@@ -131,7 +193,7 @@ function pin(place: MapPlace, selected: boolean, preview?: boolean, onSelect?: (
   el.type = "button";
   el.setAttribute("aria-label", `${place.title}, ${place.count} ${place.count === 1 ? "person" : "people"}`);
   el.setAttribute("aria-pressed", String(selected));
-  el.className = `flex cursor-pointer flex-col items-center gap-1 ${selected ? "z-10" : ""}`;
+  el.className = `flex cursor-pointer flex-col items-center gap-1 ${selected ? "z-10" : "z-1"}`; // above your blue dot
   const dot = document.createElement("span");
   dot.className = `flex size-7 items-center justify-center rounded-full border-2 border-paper text-xs font-medium text-paper shadow-(--shadow-avatar) ${selected ? "bg-accent" : "bg-ink"}`;
   dot.textContent = String(place.count);
