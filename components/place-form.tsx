@@ -7,17 +7,20 @@ import { PlacesMap } from "@/components/places-map";
 import { SectionLabel } from "@/components/section-label";
 import { useIsDesk } from "@/components/use-is-desk";
 import { WithPeople } from "@/components/with-people";
+import { locateHomeArea, savedHomeArea, type HomeArea } from "@/lib/home-area";
 import { searchAddresses, type AddressResult } from "@/lib/photon";
 
 type Props = {
   action: (prev: PlaceFormState, form: FormData) => Promise<PlaceFormState>;
   people: { id: number; name: string; color: number }[];
   submitLabel: string;
+  /** The middle of your places, for ranking search results when your city isn't known. */
+  around?: HomeArea;
   defaults?: AddressResult & { alias: string; personIds: number[] };
 };
 
 /** An address picked from a search, what you call the place, and who goes there. */
-export function PlaceForm({ action, people, submitLabel, defaults }: Props) {
+export function PlaceForm({ action, people, submitLabel, around, defaults }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
   const [address, setAddress] = useState<AddressResult | null>(defaults ?? null);
   const [chosen, setChosen] = useState(defaults?.personIds ?? []);
@@ -26,7 +29,7 @@ export function PlaceForm({ action, people, submitLabel, defaults }: Props) {
     <form action={formAction} className="flex flex-col gap-7">
       <div className="flex flex-col gap-3">
         <SectionLabel as="span">Address</SectionLabel>
-        {address ? <AddressCard address={address} onChange={() => setAddress(null)} /> : <AddressSearch onPick={setAddress} />}
+        {address ? <AddressCard address={address} onChange={() => setAddress(null)} /> : <AddressSearch around={around} onPick={setAddress} />}
         {address &&
           (["name", "address", "area", "lat", "lng"] as const).map((key) => <input key={key} type="hidden" name={key} value={address[key]} />)}
       </div>
@@ -63,20 +66,28 @@ export function PlaceForm({ action, people, submitLabel, defaults }: Props) {
   );
 }
 
-/** Searches as you type, after a short pause so the free search service isn't asked on every key. */
-function AddressSearch({ onPick }: { onPick: (address: AddressResult) => void }) {
+/**
+ * Searches as you type, after a short pause so the free search service isn't asked on every key.
+ * Results near you rank first: your city if it's saved, else your places, else it asks where you are.
+ */
+function AddressSearch({ around, onPick }: { around?: HomeArea; onPick: (address: AddressResult) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AddressResult[]>([]);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
 
+  // Without anything to rank by, search is worldwide, so ask once.
+  useEffect(() => {
+    if (!around && !savedHomeArea()) locateHomeArea();
+  }, [around]);
+
   useEffect(() => {
     const q = query.trim();
     if (q.length < 3) return;
     const abort = new AbortController();
     const timer = setTimeout(() => {
-      searchAddresses(q, abort.signal)
+      searchAddresses(q, savedHomeArea() ?? around ?? null, abort.signal)
         .then((found) => {
           setResults(found);
           setError("");
@@ -88,7 +99,7 @@ function AddressSearch({ onPick }: { onPick: (address: AddressResult) => void })
       clearTimeout(timer);
       abort.abort();
     };
-  }, [query]);
+  }, [query, around]);
 
   useEffect(() => {
     if (!open) return;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { openDb } from "./db";
 import { createPerson, deletePerson } from "./people";
-import { createPlace, deletePlace, getPlace, listPlaces, placeTitle, updatePlace } from "./places";
+import { createPlace, deletePlace, getPlace, listPlaces, placesCentre, placeTitle, updatePlace } from "./places";
 
 const park = { name: "Cal Anderson Park", address: "1635 11th Ave, Seattle", area: "Capitol Hill", lat: 47.617, lng: -122.319 };
 
@@ -52,5 +52,12 @@ describe("listPlaces", () => {
     expect(getPlace(db, p.id)?.people).toEqual([]);
     deletePlace(db, p.id);
     expect(listPlaces(db)).toEqual([]);
+  });
+});
+
+describe("placesCentre", () => {
+  it("averages where the places are, and has nothing without any", () => {
+    expect(placesCentre([])).toBeUndefined();
+    expect(placesCentre([{ lat: 40, lng: -80 }, { lat: 44, lng: -78 }])).toEqual({ lat: 42, lng: -79 });
   });
 });

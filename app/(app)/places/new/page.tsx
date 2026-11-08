@@ -5,10 +5,11 @@ import { BackLink } from "@/components/back-link";
 import { PlaceForm } from "@/components/place-form";
 import { getDb } from "@/lib/db";
 import { listPeople } from "@/lib/people";
+import { listPlaces, placesCentre } from "@/lib/places";
 
 async function Form() {
   await connection(); // read the database per request, not at build time
-  return <PlaceForm action={addPlace} people={listPeople(getDb())} submitLabel="Add place" />;
+  return <PlaceForm action={addPlace} people={listPeople(getDb())} around={placesCentre(listPlaces(getDb()))} submitLabel="Add place" />;
 }
 
 export default function NewPlacePage() {

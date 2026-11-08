@@ -89,3 +89,10 @@ export function listPlaces(db: Db): Place[] {
 export function getPlace(db: Db, id: number) {
   return listPlaces(db).find((p) => p.id === id);
 }
+
+/** The middle of your places, to rank address search near them; undefined with none. */
+export function placesCentre(list: { lat: number; lng: number }[]) {
+  if (!list.length) return undefined;
+  const sum = list.reduce((a, p) => ({ lat: a.lat + p.lat, lng: a.lng + p.lng }), { lat: 0, lng: 0 });
+  return { lat: sum.lat / list.length, lng: sum.lng / list.length };
+}
