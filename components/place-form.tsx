@@ -75,6 +75,9 @@ export function PlaceForm({ action, people, submitLabel, placeId, around, defaul
   );
 }
 
+// Free search only knows places in OpenStreetMap, which misses some small businesses.
+const CANT_FIND = "Can't find it? Search its address, then give it a nickname.";
+
 /**
  * Searches as you type, after a short pause so the free search service isn't asked on every key.
  * Results near you rank first: your city if it's saved, else your places, else it asks where you are.
@@ -83,6 +86,7 @@ function AddressSearch({ around, onPick }: { around?: HomeArea; onPick: (address
   const ref = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AddressResult[]>([]);
+  const [searched, setSearched] = useState(""); // the query the results are for
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -99,6 +103,7 @@ function AddressSearch({ around, onPick }: { around?: HomeArea; onPick: (address
       searchAddresses(q, savedHomeArea() ?? around ?? null, abort.signal)
         .then((found) => {
           setResults(found);
+          setSearched(q);
           setError("");
           setOpen(true);
         })
@@ -161,10 +166,16 @@ function AddressSearch({ around, onPick }: { around?: HomeArea; onPick: (address
               </span>
             </button>
           ))}
+          <p className="mx-2.5 mt-1.5 border-t border-line pt-2.5 text-xs text-muted">{CANT_FIND}</p>
           <p className="px-2.5 pt-1.5 pb-1 text-[0.6875rem] text-muted">Search by Photon · © OpenStreetMap</p>
         </div>
       )}
-      {open && !short && results.length === 0 && !error && <p className="mt-2 text-xs text-muted">No matches yet. Keep typing.</p>}
+      {!short && searched === query.trim() && results.length === 0 && !error && (
+        <p className="mt-2.5 text-[0.8125rem] text-muted">
+          <span className="block font-medium text-ink">No matches</span>
+          {CANT_FIND}
+        </p>
+      )}
     </div>
   );
 }
