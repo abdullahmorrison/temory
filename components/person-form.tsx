@@ -15,13 +15,15 @@ type Props = {
   submitLabel: string;
   color: number; // the person's avatar color, for the preview
   types: RelationshipType[];
-  defaults?: { name: string; closeness: number; typeId: number | null; notes: string };
+  defaults?: { id: number; name: string; closeness: number; typeId: number | null; notes: string };
 };
 
 export function PersonForm({ action, submitLabel, color, types, defaults }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
   const [name, setName] = useState(defaults?.name ?? "");
-  const [type, setType] = useState(types.find((t) => t.id === defaults?.typeId) ?? null);
+  const [typeId, setTypeId] = useState(defaults?.typeId ?? null);
+  // Read from the list each render, so a type renamed or deleted from the dropdown shows that right away.
+  const type = types.find((t) => t.id === typeId) ?? null;
   const c = personColor(color);
   return (
     <form action={formAction} className="flex flex-col gap-8">
@@ -47,7 +49,7 @@ export function PersonForm({ action, submitLabel, color, types, defaults }: Prop
 
       <div className="flex flex-col gap-3">
         <SectionLabel as="span">Relationship type</SectionLabel>
-        <TypePicker types={types} value={type} onChange={setType} />
+        <TypePicker types={types} value={type} onChange={setTypeId} person={{ id: defaults?.id, name }} />
         <input type="hidden" name="typeId" value={type?.id ?? ""} />
       </div>
 
