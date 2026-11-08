@@ -2,6 +2,7 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Map as MapLibre, Marker } from "maplibre-gl";
+import { Info } from "lucide-react";
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { locateHomeArea, rememberHomeArea, savedHomeArea } from "@/lib/home-area";
 import { cityPoints } from "@/lib/map-frame";
@@ -29,14 +30,65 @@ type Props = {
   onBackground?: () => void;
   /** Room kept clear of the map's edges, like a sheet over its bottom, when centring on a place. */
   padding?: { top?: number; bottom?: number };
-  /** Where the map's credit goes: phones keep it at the top, clear of the sheet. */
-  credit?: "top-right" | "bottom-right";
+  /** Off when the page shows the map's credit itself (phones, as <MapCredit>). */
+  credit?: boolean;
   className?: string;
   ref?: Ref<PlacesMapHandle>;
 };
 
+// Who the map has to credit: OpenFreeMap serves it, built on OpenMapTiles and OpenStreetMap's data.
+const link = (href: string, text: string) => (
+  <a href={href} target="_blank" rel="noreferrer" className="underline-offset-2 hover:underline">
+    {text}
+  </a>
+);
+const OPENFREEMAP = link("https://openfreemap.org", "OpenFreeMap");
+const OPENMAPTILES = link("https://www.openmaptiles.org/", "© OpenMapTiles");
+const OPENSTREETMAP = link("https://www.openstreetmap.org/copyright", "OpenStreetMap");
+
+/** The map's credit as an ⓘ that opens it, for pages that place it themselves. A tap elsewhere closes it. */
+export function MapCredit({ className = "" }: { className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [open]);
+  return (
+    <div ref={ref} className={`flex items-center gap-2 ${className}`}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-label="Map credits"
+        className="flex size-10 shrink-0 items-center justify-center rounded-full border border-line bg-paper text-muted shadow-(--shadow-avatar) transition-colors hover:border-muted"
+      >
+        <Info size="1.125rem" />
+      </button>
+      {open && (
+        <p className="rounded-xl bg-paper px-3 py-2 text-[0.6875rem] text-muted shadow-(--shadow-avatar)">
+          {OPENFREEMAP} {OPENMAPTILES} Data from {OPENSTREETMAP}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** The short credit, for a map too small for the full one. */
+export function ShortMapCredit({ className = "" }: { className?: string }) {
+  return (
+    <span className={`rounded bg-paper/80 px-1.25 py-0.5 text-[0.5625rem] text-muted ${className}`}>
+      {OPENMAPTILES} © {OPENSTREETMAP}
+    </span>
+  );
+}
+
 /** A map of places as numbered pins (how many people go there), the selected one in the accent colour. */
-export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, onBackground, preview, padding, credit = "bottom-right", className = "", ref }: Props) {
+export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, onBackground, preview, padding, credit = true, className = "", ref }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibre>();
   const markers = useRef<Marker[]>([]);
@@ -62,7 +114,7 @@ export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, o
         interactive: !preview,
         attributionControl: false,
       });
-      if (!preview) live.addControl(new maplibre.AttributionControl({ compact: false }), credit);
+      if (!preview && credit) live.addControl(new maplibre.AttributionControl({ compact: false }), "bottom-right");
       live.on("load", () => setMap(live));
       live.on("click", () => background.current?.());
     });

@@ -6,7 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useDraftPin } from "@/components/draft-pin";
 import { EmojiBadge } from "@/components/emoji-badge";
-import { PlacesMap, type MapPlace, type PlacesMapHandle } from "@/components/places-map";
+import { MapCredit, PlacesMap, type MapPlace, type PlacesMapHandle } from "@/components/places-map";
 import { useIsDesk } from "@/components/use-is-desk";
 import { initials } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
@@ -39,6 +39,16 @@ function LocateButton({ map, className }: { map: React.RefObject<PlacesMapHandle
     >
       <LocateFixed size="1.25rem" />
     </button>
+  );
+}
+
+/** Phones: the map's credit on the left, the locate button on the right. */
+function MapButtons({ map, className }: { map: React.RefObject<PlacesMapHandle | null>; className: string }) {
+  return (
+    <div className={`pointer-events-none flex items-end justify-between gap-3 *:pointer-events-auto ${className}`}>
+      <MapCredit />
+      <LocateButton map={map} className="shrink-0" />
+    </div>
   );
 }
 
@@ -78,8 +88,9 @@ export function PlacesHome({ places }: { places: Place[] }) {
   if (desk) return <PlaceList places={places} selectedId={selectedId} />;
   return (
     <div className="relative -mb-28 h-dvh overflow-hidden">
-      {/* MapLibre makes its own box position: relative, so a wrapper does the filling. */}
-      <div className="absolute inset-0">
+      {/* MapLibre makes its own box position: relative, so a wrapper does the filling. Isolated so its
+          pins' z-index stays under the buttons drawn over it. */}
+      <div className="absolute inset-0 isolate">
         <PlacesMap
           ref={map}
           places={pins}
@@ -87,9 +98,8 @@ export function PlacesHome({ places }: { places: Place[] }) {
           onSelect={select}
           onBackground={() => select()}
           padding={selected ? SHEET_ROOM : HEADER_ROOM}
-          // MapLibre's own styles sit outside Tailwind's layers, so moving its credit below the header needs !.
-          credit="top-right"
-          className="size-full [&_.maplibregl-ctrl-top-right]:top-30!"
+          credit={false} // shown below as an ⓘ, so it rides above the sheet with the locate button
+          className="size-full"
         />
       </div>
       <header className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between bg-linear-to-b from-paper via-paper/80 to-transparent px-7 pt-14 pb-10">
@@ -114,11 +124,11 @@ export function PlacesHome({ places }: { places: Place[] }) {
           </Link>
         </div>
       )}
-      {/* The locate button rides on top of the sheet when one is open, else sits above the tab bar. */}
-      {!selected && <LocateButton map={map} className="absolute right-7 bottom-[calc(max(env(safe-area-inset-bottom),12px)+76px)]" />}
+      {/* The credit and locate button ride on top of the sheet when one is open, else sit above the tab bar. */}
+      {!selected && <MapButtons map={map} className="absolute inset-x-7 bottom-[calc(max(env(safe-area-inset-bottom),12px)+76px)]" />}
       {selected && (
-        <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-end">
-          <LocateButton map={map} className="mr-7 mb-3.5" />
+        <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col">
+          <MapButtons map={map} className="mx-7 mb-3.5" />
           <section className="max-h-[60dvh] w-full overflow-y-auto rounded-t-3xl bg-paper px-7 pt-3 pb-[calc(max(env(safe-area-inset-bottom),12px)+88px)] shadow-(--shadow-pop)">
             <div className="mx-auto mb-5 h-1 w-9 rounded-full bg-line" />
             <div className="flex items-start justify-between gap-4">

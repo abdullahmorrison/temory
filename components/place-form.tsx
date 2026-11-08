@@ -4,7 +4,7 @@ import { MapPin, Search, Shield } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import type { PlaceFormState } from "@/app/(app)/places/actions";
 import { setDraftPin } from "@/components/draft-pin";
-import { PlacesMap } from "@/components/places-map";
+import { PlacesMap, ShortMapCredit } from "@/components/places-map";
 import { SectionLabel } from "@/components/section-label";
 import { useIsDesk } from "@/components/use-is-desk";
 import { WithPeople } from "@/components/with-people";
@@ -190,7 +190,12 @@ function AddressCard({ address, onChange }: { address: AddressResult; onChange: 
   const desk = useIsDesk();
   return (
     <div className="overflow-hidden rounded-2xl bg-surface">
-      {!desk && <PlacesMap preview places={[{ id: 0, title: address.name, count: 0, lat: address.lat, lng: address.lng }]} className="h-32" />}
+      {!desk && (
+        <div className="relative isolate">
+          <PlacesMap preview places={[{ id: 0, title: address.name, count: 0, lat: address.lat, lng: address.lng }]} className="h-32" />
+          <ShortMapCredit className="absolute right-1 bottom-1" />
+        </div>
+      )}
       <div className="flex items-center gap-3 px-3.5 py-3">
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[0.9375rem]">{address.name}</span>
