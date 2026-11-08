@@ -190,7 +190,20 @@ function AddressCard({ address, onChange }: { address: AddressResult; onChange: 
   const desk = useIsDesk();
   return (
     <div className="overflow-hidden rounded-2xl bg-surface">
-      {!desk && <PlacesMap preview places={[{ id: 0, title: address.name, count: 0, lat: address.lat, lng: address.lng }]} className="h-32" />}
+      {!desk && (
+        <div className="relative isolate">
+          <PlacesMap preview places={[{ id: 0, title: address.name, count: 0, lat: address.lat, lng: address.lng }]} className="h-32" />
+          {/* The map's tiles need a credit wherever they show; a thumbnail gets the short one. */}
+          <a
+            href="https://www.openstreetmap.org/copyright"
+            target="_blank"
+            rel="noreferrer"
+            className="absolute right-1 bottom-1 rounded bg-paper/80 px-1.25 py-0.5 text-[0.5625rem] text-muted"
+          >
+            © OpenStreetMap
+          </a>
+        </div>
+      )}
       <div className="flex items-center gap-3 px-3.5 py-3">
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[0.9375rem]">{address.name}</span>
