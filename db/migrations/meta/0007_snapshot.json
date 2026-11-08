@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "266718e3-99f2-4c99-96c3-86816ef31bf8",
+  "id": "c32c2436-05e9-4bbd-9a37-4a102c9f0a2b",
   "prevId": "71f1282e-c488-4f95-9e96-d304172f6d61",
   "tables": {
     "activities": {
@@ -50,14 +50,6 @@
           "notNull": true,
           "autoincrement": false,
           "default": "'doing'"
-        },
-        "in_the_way": {
-          "name": "in_the_way",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "''"
         },
         "created_at": {
           "name": "created_at",

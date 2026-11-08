@@ -42,19 +42,6 @@ async function Activity({ params }: { params: Promise<{ id: string }> }) {
         <ActivityStatusSwitch id={activity.id} status={activity.status} />
       </div>
 
-      {activity.status === "want" && (
-        <section className="mt-8 flex flex-col gap-2.5">
-          <SectionLabel>What&apos;s in the way</SectionLabel>
-          {activity.inTheWay ? (
-            <p className="font-serif text-[1.0625rem]">{activity.inTheWay}</p>
-          ) : (
-            <Link href={edit} className="font-serif text-[1.0625rem] text-muted/70 hover:text-muted">
-              Add what&apos;s keeping you from it…
-            </Link>
-          )}
-        </section>
-      )}
-
       <section className="mt-8 flex flex-col gap-2.5">
         <SectionLabel>With</SectionLabel>
         <ul className="flex flex-col">

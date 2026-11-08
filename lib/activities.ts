@@ -7,7 +7,7 @@ import { personEmoji, withType } from "@/lib/people";
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
-type ActivityInput = { name: string; icon: string; status?: string; inTheWay?: string; notes?: string; personIds?: number[] };
+type ActivityInput = { name: string; icon: string; status?: string; notes?: string; personIds?: number[] };
 
 /** Trims and checks what the user typed; throws a message fit to show them. */
 function clean(db: Db, input: ActivityInput) {
@@ -21,7 +21,7 @@ function clean(db: Db, input: ActivityInput) {
     const found = db.select({ id: people.id }).from(people).where(inArray(people.id, personIds)).all();
     if (found.length !== personIds.length) throw new Error("Someone you added no longer exists.");
   }
-  return { values: { name, icon: input.icon, status, inTheWay: (input.inTheWay ?? "").trim(), notes: (input.notes ?? "").trim() }, personIds };
+  return { values: { name, icon: input.icon, status, notes: (input.notes ?? "").trim() }, personIds };
 }
 
 function setPeople(db: Tx, activityId: number, personIds: number[]) {
@@ -94,7 +94,7 @@ export function getActivity(db: Db, id: number) {
  */
 export function listActivities(db: Db) {
   const rows = db
-    .select({ id: activities.id, name: activities.name, icon: activities.icon, status: activities.status, inTheWay: activities.inTheWay, moments: count(entryActivities.entryId) })
+    .select({ id: activities.id, name: activities.name, icon: activities.icon, status: activities.status, moments: count(entryActivities.entryId) })
     .from(activities)
     .leftJoin(entryActivities, eq(entryActivities.activityId, activities.id))
     .groupBy(activities.id)

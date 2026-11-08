@@ -93,11 +93,10 @@ describe("deleting", () => {
 });
 
 describe("activity status", () => {
-  it("starts as Doing, and keeps what's in the way of a Want to", () => {
+  it("starts as Doing, and checks the status", () => {
     const db = openDb(":memory:");
-    expect(createActivity(db, { name: "Chess", icon: "dices" })).toMatchObject({ status: "doing", inTheWay: "" });
-    const climbing = createActivity(db, { name: "Climbing", icon: "dices", status: "want", inTheWay: " need a gym close by " });
-    expect(climbing).toMatchObject({ status: "want", inTheWay: "need a gym close by" });
+    expect(createActivity(db, { name: "Chess", icon: "dices" })).toMatchObject({ status: "doing" });
+    expect(createActivity(db, { name: "Climbing", icon: "dices", status: "want" })).toMatchObject({ status: "want" });
     expect(() => createActivity(db, { name: "Golf", icon: "dices", status: "someday" })).toThrow("Unknown status");
   });
 

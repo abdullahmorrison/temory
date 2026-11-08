@@ -12,7 +12,6 @@ function read(form: FormData) {
     name: String(form.get("name") ?? ""),
     icon: String(form.get("icon") ?? ""),
     status: String(form.get("status") ?? "doing"),
-    inTheWay: String(form.get("inTheWay") ?? ""),
     notes: String(form.get("notes") ?? ""),
     personIds: form.getAll("personIds").map(Number),
   };
