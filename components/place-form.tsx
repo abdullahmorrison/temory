@@ -151,7 +151,7 @@ function AddressSearch({ around, onPick }: { around?: HomeArea; onPick: (address
       </label>
       <p className="mt-2 flex gap-1.5 text-[0.6875rem] text-muted">
         <Shield size="0.875rem" className="shrink-0" />
-        Temory never saves your location. Search sends a rough area to find places near you.
+        Temory&apos;s server never sees your location. Search sends a rough area to find places near you.
       </p>
       {error && <p className="mt-2 text-xs text-accent">{error}</p>}
       {open && !short && results.length > 0 && (
