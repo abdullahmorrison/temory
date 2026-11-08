@@ -2,6 +2,7 @@
 // on OpenStreetMap. Its public server is fair use, so callers wait for a pause in typing.
 
 import type { HomeArea } from "@/lib/home-area";
+import { distanceKm } from "@/lib/map-frame";
 
 export type AddressResult = { name: string; address: string; area: string; lat: number; lng: number };
 
@@ -21,9 +22,24 @@ export function toResult({ geometry, properties: p }: Feature): AddressResult {
 
 /** Up to five places matching what was typed, those near `near` first. Without it, results are worldwide. */
 export async function searchAddresses(query: string, near: HomeArea | null, signal?: AbortSignal): Promise<AddressResult[]> {
-  const url = `https://photon.komoot.io/api/?limit=5&q=${encodeURIComponent(query)}${near ? `&lat=${near.lat}&lon=${near.lng}` : ""}`;
+  // Photon weighs how notable a place is far above how near it is by default (0.2), so a big campus
+  // across the lake beats the office down the street. 0.1 lets nearness count more.
+  const url = `https://photon.komoot.io/api/?limit=5&q=${encodeURIComponent(query)}${near ? `&lat=${near.lat}&lon=${near.lng}&location_bias_scale=0.1` : ""}`;
   const response = await fetch(url, { signal });
   if (!response.ok) throw new Error("Address search isn't answering. Try again in a moment.");
   const { features } = (await response.json()) as { features: Feature[] };
-  return features.map(toResult).filter((r) => r.name);
+  const results = features.map(toResult).filter((r) => r.name);
+  return near ? nearestFirst(results, near) : results;
+}
+
+/**
+ * Places with the same name, like several offices of one company, nearest first. Different names
+ * keep Photon's order, which is about how well they match what was typed.
+ */
+export function nearestFirst(results: AddressResult[], near: HomeArea) {
+  const firstSeen = new Map<string, number>();
+  results.forEach((r, i) => firstSeen.set(r.name.toLowerCase(), firstSeen.get(r.name.toLowerCase()) ?? i));
+  return [...results].sort(
+    (a, b) => firstSeen.get(a.name.toLowerCase())! - firstSeen.get(b.name.toLowerCase())! || distanceKm(a, near) - distanceKm(b, near),
+  );
 }
