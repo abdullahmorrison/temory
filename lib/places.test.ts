@@ -60,4 +60,9 @@ describe("placesCentre", () => {
     expect(placesCentre([])).toBeUndefined();
     expect(placesCentre([{ lat: 40, lng: -80 }, { lat: 44, lng: -78 }])).toEqual({ lat: 42, lng: -79 });
   });
+
+  it("leaves a far-off place out of the middle", () => {
+    const seattle = [{ lat: 47.6, lng: -122.3 }, { lat: 47.62, lng: -122.32 }];
+    expect(placesCentre([...seattle, { lat: 49.3, lng: -123.14 }])).toEqual({ lat: 47.61, lng: -122.31 });
+  });
 });

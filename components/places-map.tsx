@@ -40,6 +40,9 @@ export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, o
   const box = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibre>();
   const markers = useRef<Marker[]>([]);
+  const youMarker = useRef<Marker>(undefined);
+  const draftMarker = useRef<Marker>(undefined);
+  const framed = useRef<string>(undefined);
   const background = useRef(onBackground);
   useEffect(() => {
     background.current = onBackground;
@@ -63,9 +66,16 @@ export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, o
       live.on("load", () => setMap(live));
       live.on("click", () => background.current?.());
     });
+    // Next keeps a page you leave alive and runs this again when you come back, so the new map starts
+    // fresh: framed again, with its own markers.
     return () => {
       cancelled = true;
       live?.remove();
+      setMap(undefined);
+      markers.current = [];
+      youMarker.current = undefined;
+      draftMarker.current = undefined;
+      framed.current = undefined;
     };
   }, [preview, credit]);
 
@@ -81,6 +91,8 @@ export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, o
         rememberHomeArea(coords.latitude, coords.longitude); // keeps search ranked near you after a move
       },
       () => {
+        // Some errors leave the browser still watching, so stop it before a later tap starts another.
+        navigator.geolocation.clearWatch(watching.current!);
         watching.current = undefined;
         flyToYou.current = false;
       },
@@ -97,14 +109,13 @@ export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, o
   }, [preview]);
   useImperativeHandle(ref, () => ({
     locate() {
-      if (you && map) map.easeTo({ center: [you.lng, you.lat], zoom: Math.max(map.getZoom(), CLOSE_ZOOM - 1), padding: { top: padding?.top ?? 0, bottom: padding?.bottom ?? 0, left: 0, right: 0 } });
+      if (you && map) map.easeTo({ center: [you.lng, you.lat], zoom: Math.max(map.getZoom(), CLOSE_ZOOM - 1), padding: edges(padding) });
       else {
         flyToYou.current = true;
         watch();
       }
     },
   }));
-  const youMarker = useRef<Marker>(undefined);
   useEffect(() => {
     if (!map || !you) return;
     let cancelled = false;
@@ -114,7 +125,7 @@ export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, o
       youMarker.current.setLngLat([you.lng, you.lat]);
       if (flyToYou.current) {
         flyToYou.current = false;
-        map.easeTo({ center: [you.lng, you.lat], zoom: Math.max(map.getZoom(), CLOSE_ZOOM - 1), padding: { top: padding?.top ?? 0, bottom: padding?.bottom ?? 0, left: 0, right: 0 } });
+        map.easeTo({ center: [you.lng, you.lat], zoom: Math.max(map.getZoom(), CLOSE_ZOOM - 1), padding: edges(padding) });
       }
     });
     return () => {
@@ -153,7 +164,6 @@ export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, o
     };
   }, [map, places.length, preview]);
 
-  const draftMarker = useRef<Marker>(undefined);
   useEffect(() => {
     if (!map) return;
     let cancelled = false;
@@ -175,7 +185,6 @@ export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, o
   // Frame the city your places are in, leaving out far-off ones. Again whenever a place is added or
   // removed or `frameKey` changes, unless one is selected; otherwise the map only follows the selection.
   const placeIds = `${places.map((p) => p.id).join()}|${frameKey}`;
-  const framed = useRef<string>(undefined);
   useEffect(() => {
     if (!map || !places.length || framed.current === placeIds) return;
     const first = framed.current === undefined;
@@ -190,11 +199,13 @@ export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, o
   useEffect(() => {
     const place = places.find((p) => p.id === selectedId);
     if (!map || !place || preview) return;
-    map.easeTo({ center: [place.lng, place.lat], zoom: Math.max(map.getZoom(), CLOSE_ZOOM - 1), padding: { top: padding?.top ?? 0, bottom: padding?.bottom ?? 0, left: 0, right: 0 } });
+    map.easeTo({ center: [place.lng, place.lat], zoom: Math.max(map.getZoom(), CLOSE_ZOOM - 1), padding: edges(padding) });
   }, [map, places, selectedId, preview, padding]);
 
   return <div ref={box} className={`bg-surface ${className}`} />;
 }
+
+const edges = (padding?: { top?: number; bottom?: number }) => ({ top: padding?.top ?? 0, bottom: padding?.bottom ?? 0, left: 0, right: 0 });
 
 /** The usual blue "you are here" dot with a soft halo, under the pins. */
 function youDot() {

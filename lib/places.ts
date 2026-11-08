@@ -1,6 +1,7 @@
 import { asc, eq, inArray } from "drizzle-orm";
 import { people, personPlaces, places, relationshipTypes } from "@/db/schema";
 import type { Db } from "@/lib/db";
+import { cityPoints } from "@/lib/map-frame";
 import { personEmoji, withType } from "@/lib/people";
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
@@ -90,9 +91,10 @@ export function getPlace(db: Db, id: number) {
   return listPlaces(db).find((p) => p.id === id);
 }
 
-/** The middle of your places, to rank address search near them; undefined with none. */
-export function placesCentre(list: { lat: number; lng: number }[]) {
-  if (!list.length) return undefined;
+/** The middle of your places in your city, to rank address search near them; undefined with none. */
+export function placesCentre(all: { lat: number; lng: number }[]) {
+  if (!all.length) return undefined;
+  const list = cityPoints(all); // a far-off place would pull the middle out of town
   const sum = list.reduce((a, p) => ({ lat: a.lat + p.lat, lng: a.lng + p.lng }), { lat: 0, lng: 0 });
   return { lat: sum.lat / list.length, lng: sum.lng / list.length };
 }

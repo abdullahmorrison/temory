@@ -144,14 +144,14 @@ function AddressSearch({ around, onPick }: { around?: HomeArea; onPick: (address
             if (e.key === "Escape") setOpen(false);
             if (e.key !== "Enter") return;
             e.preventDefault();
-            if (results[0] && !short) onPick(results[0]);
+            if (results[0] && searched === query.trim()) onPick(results[0]); // not the last search's top result
           }}
           className="min-w-0 flex-1 bg-transparent text-[0.9375rem] outline-none placeholder:text-muted"
         />
       </label>
       <p className="mt-2 flex gap-1.5 text-[0.6875rem] text-muted">
         <Shield size="0.875rem" className="shrink-0" />
-        Your location stays on this device. It&apos;s only used to find places near you.
+        Temory never saves your location. Search sends a rough area to find places near you.
       </p>
       {error && <p className="mt-2 text-xs text-accent">{error}</p>}
       {open && !short && results.length > 0 && (
