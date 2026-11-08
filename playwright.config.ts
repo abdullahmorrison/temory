@@ -20,6 +20,5 @@ export default defineConfig({
     env: { DATABASE_PATH: "e2e/.data/test.db" },
     url: `http://localhost:${PORT}/people`,
     timeout: 300_000,
-    reuseExistingServer: !process.env.CI,
   },
 });
