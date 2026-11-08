@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Search } from "lucide-react";
+import { MapPin, Search, Shield } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import type { PlaceFormState } from "@/app/(app)/places/actions";
 import { setDraftPin } from "@/components/draft-pin";
@@ -149,6 +149,10 @@ function AddressSearch({ around, onPick }: { around?: HomeArea; onPick: (address
           className="min-w-0 flex-1 bg-transparent text-[0.9375rem] outline-none placeholder:text-muted"
         />
       </label>
+      <p className="mt-2 flex gap-1.5 text-[0.6875rem] text-muted">
+        <Shield size="0.875rem" className="shrink-0" />
+        Your location stays on this device. It&apos;s only used to find places near you.
+      </p>
       {error && <p className="mt-2 text-xs text-accent">{error}</p>}
       {open && !short && results.length > 0 && (
         <div className="absolute inset-x-0 top-full z-10 mt-1.5 rounded-2xl border border-line bg-surface p-1.5 shadow-(--shadow-pop)">
