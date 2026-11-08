@@ -19,6 +19,8 @@ Open an issue describing the problem you want solved, not just the solution. Say
 
 Issue titles follow the same [Conventional Commits](https://www.conventionalcommits.org) style as commits, e.g. `feat(people): add a graph view of who knows whom`. The issue forms prefill the type.
 
+An idea that's still an open question isn't a change yet, so its title has no type: an imperative phrase like `Explore ways to track how friendships change`, labelled `question`.
+
 ## Making changes
 
 Keep each change focused on one thing. Before committing, run the checks:
