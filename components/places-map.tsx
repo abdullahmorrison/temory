@@ -3,7 +3,7 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Map as MapLibre, Marker } from "maplibre-gl";
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
-import { locateHomeArea, savedHomeArea } from "@/lib/home-area";
+import { locateHomeArea, rememberHomeArea, savedHomeArea } from "@/lib/home-area";
 import { cityPoints } from "@/lib/map-frame";
 
 // OpenFreeMap: free, no key, no limits. Its style carries the credit the map has to show.
@@ -74,7 +74,10 @@ export function PlacesMap({ places, selectedId, draft, onSelect, onBackground, p
   const watch = () => {
     if (watching.current !== undefined || !("geolocation" in navigator)) return;
     watching.current = navigator.geolocation.watchPosition(
-      ({ coords }) => setYou({ lat: coords.latitude, lng: coords.longitude }),
+      ({ coords }) => {
+        setYou({ lat: coords.latitude, lng: coords.longitude });
+        rememberHomeArea(coords.latitude, coords.longitude); // keeps search ranked near you after a move
+      },
       () => {
         watching.current = undefined;
         flyToYou.current = false;
