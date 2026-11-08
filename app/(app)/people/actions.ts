@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { createPerson, deletePerson, moveToTier, updatePerson } from "@/lib/people";
-import { createType, type RelationshipType } from "@/lib/relationship-types";
+import { createType, deleteType, updateType } from "@/lib/relationship-types";
 
 export type PersonFormState = { error?: string };
 
@@ -51,13 +51,30 @@ export async function removePerson(id: number) {
   done("/people");
 }
 
-/** Makes a relationship type of your own from the person form, which then picks it. */
-export async function addRelationshipType(name: string, emoji: string): Promise<{ type?: RelationshipType; error?: string }> {
+export type TypeResult = { id?: number; error?: string };
+
+// Each change refreshes the /people layout, so every open form and badge shows it right away.
+function typeChange(change: () => number | void): TypeResult {
   try {
-    return { type: createType(getDb(), { name, emoji }) };
+    const id = change() ?? undefined;
+    revalidatePath("/people", "layout");
+    return { id };
   } catch (e) {
     return { error: message(e) };
   }
+}
+
+/** Makes a relationship type of your own from the person form, which then picks it. */
+export async function addRelationshipType(name: string, emoji: string) {
+  return typeChange(() => createType(getDb(), { name, emoji }).id);
+}
+
+export async function editRelationshipType(id: number, name: string, emoji: string) {
+  return typeChange(() => updateType(getDb(), id, { name, emoji }).id);
+}
+
+export async function removeRelationshipType(id: number) {
+  return typeChange(() => deleteType(getDb(), id));
 }
 
 /** Drag-and-drop between tiers. Returns an error instead of redirecting, so the arcs can snap back. */
