@@ -20,6 +20,8 @@ type Props = {
   onSelect?: (id: number) => void;
   /** A small map that only shows where a place is: no panning, no labels. */
   preview?: boolean;
+  /** An address picked but not saved yet, shown as a plain pin and centred on. */
+  draft?: { title: string; lat: number; lng: number } | null;
   /** A tap on the map itself, not a pin. */
   onBackground?: () => void;
   /** Room kept clear of the map's edges, like a sheet over its bottom, when centring on a place. */
@@ -31,7 +33,7 @@ type Props = {
 };
 
 /** A map of places as numbered pins (how many people go there), the selected one in the accent colour. */
-export function PlacesMap({ places, selectedId, onSelect, onBackground, preview, padding, credit = "bottom-right", className = "", ref }: Props) {
+export function PlacesMap({ places, selectedId, draft, onSelect, onBackground, preview, padding, credit = "bottom-right", className = "", ref }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibre>();
   const markers = useRef<Marker[]>([]);
@@ -145,6 +147,25 @@ export function PlacesMap({ places, selectedId, onSelect, onBackground, preview,
       cancelled = true;
     };
   }, [map, places.length, preview]);
+
+  const draftMarker = useRef<Marker>(undefined);
+  useEffect(() => {
+    if (!map) return;
+    let cancelled = false;
+    import("maplibre-gl").then(({ default: maplibre }) => {
+      if (cancelled) return;
+      draftMarker.current?.remove();
+      draftMarker.current = undefined;
+      if (!draft) return;
+      draftMarker.current = new maplibre.Marker({ element: pin({ id: 0, title: draft.title, count: 0, lat: draft.lat, lng: draft.lng }, true, true), anchor: "bottom" })
+        .setLngLat([draft.lng, draft.lat])
+        .addTo(map);
+      map.easeTo({ center: [draft.lng, draft.lat], zoom: Math.max(map.getZoom(), CLOSE_ZOOM) });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [map, draft]);
 
   // Frame every place once; after that, only move to follow the selection.
   useEffect(() => {

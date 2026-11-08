@@ -20,7 +20,7 @@ async function Edit({ params }: { params: Promise<{ id: string }> }) {
       <BackLink href={`/places?place=${place.id}`} label={`Back to ${place.title}`} everywhere />
       <h1 className="mt-6 mb-9 text-2xl font-medium desk:mt-4 desk:text-[1.375rem]">Edit place</h1>
       {/* Keyed by what's saved: Next keeps a left page alive with its state, so a reopened form would hold the values from before. */}
-      <PlaceForm key={JSON.stringify(defaults)} action={editPlace.bind(null, place.id)} people={listPeople(getDb())} around={placesCentre(listPlaces(getDb()))} submitLabel="Save" defaults={defaults} />
+      <PlaceForm key={JSON.stringify(defaults)} action={editPlace.bind(null, place.id)} placeId={place.id} people={listPeople(getDb())} around={placesCentre(listPlaces(getDb()))} submitLabel="Save" defaults={defaults} />
       <div className="mt-14 border-t border-line pt-6">
         <ConfirmDelete label="Delete place" warning={`Delete ${place.title}? The people stay.`} action={removePlace.bind(null, place.id)} />
       </div>

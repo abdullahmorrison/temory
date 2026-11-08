@@ -4,6 +4,7 @@ import { ChevronRight, LocateFixed, MapPin, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useRef } from "react";
+import { useDraftPin } from "@/components/draft-pin";
 import { EmojiBadge } from "@/components/emoji-badge";
 import { PlacesMap, type MapPlace, type PlacesMapHandle } from "@/components/places-map";
 import { useIsDesk } from "@/components/use-is-desk";
@@ -45,12 +46,14 @@ function LocateButton({ map, className }: { map: React.RefObject<PlacesMapHandle
 export function DeskMap({ places }: { places: Place[] }) {
   const desk = useIsDesk();
   const [selected, select] = useSelection();
-  const pins = useMemo(() => toMap(places), [places]);
+  const draft = useDraftPin();
+  // While a place is being edited, its new pin stands in for the saved one.
+  const pins = useMemo(() => toMap(places.filter((p) => p.id !== draft?.placeId)), [places, draft?.placeId]);
   const map = useRef<PlacesMapHandle>(null);
   if (!desk) return null;
   return (
     <div className="relative h-dvh min-w-0 flex-1">
-      <PlacesMap ref={map} places={pins} selectedId={selected} onSelect={select} onBackground={() => select()} className="size-full" />
+      <PlacesMap ref={map} places={pins} selectedId={selected} draft={draft} onSelect={select} onBackground={() => select()} className="size-full" />
       <LocateButton map={map} className="absolute right-6 bottom-12" />
     </div>
   );

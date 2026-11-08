@@ -3,6 +3,7 @@
 import { MapPin, Search } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import type { PlaceFormState } from "@/app/(app)/places/actions";
+import { setDraftPin } from "@/components/draft-pin";
 import { PlacesMap } from "@/components/places-map";
 import { SectionLabel } from "@/components/section-label";
 import { useIsDesk } from "@/components/use-is-desk";
@@ -14,16 +15,24 @@ type Props = {
   action: (prev: PlaceFormState, form: FormData) => Promise<PlaceFormState>;
   people: { id: number; name: string; color: number }[];
   submitLabel: string;
+  /** The place being edited, so the map hides its saved pin while the new one is shown. */
+  placeId?: number;
   /** The middle of your places, for ranking search results when your city isn't known. */
   around?: HomeArea;
   defaults?: AddressResult & { alias: string; personIds: number[] };
 };
 
 /** An address picked from a search, what you call the place, and who goes there. */
-export function PlaceForm({ action, people, submitLabel, around, defaults }: Props) {
+export function PlaceForm({ action, people, submitLabel, placeId, around, defaults }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
   const [address, setAddress] = useState<AddressResult | null>(defaults ?? null);
   const [chosen, setChosen] = useState(defaults?.personIds ?? []);
+
+  // Pin the picked address on the map beside the form (desktop) until it's saved or the form closes.
+  useEffect(() => {
+    setDraftPin(address && { placeId, title: address.name, lat: address.lat, lng: address.lng });
+    return () => setDraftPin(null);
+  }, [address, placeId]);
 
   return (
     <form action={formAction} className="flex flex-col gap-7">
