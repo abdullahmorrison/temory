@@ -9,8 +9,8 @@ import type { RelationshipType } from "@/lib/relationship-types";
 type Props = { types: RelationshipType[]; value: RelationshipType | null; onChange: (type: RelationshipType | null) => void };
 
 /**
- * A dropdown of relationship types that floats over the form: presets, then yours, then a row to make
- * a new one. Tapping the picked type again clears it. Escape or a tap outside closes it.
+ * A dropdown of relationship types that floats over the form: None, presets, then yours, then a row to
+ * make a new one. Escape or a tap outside closes it.
  */
 export function TypePicker({ types: saved, value, onChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
@@ -66,6 +66,7 @@ export function TypePicker({ types: saved, value, onChange }: Props) {
 
       {open && (
         <div className="absolute inset-x-0 top-full z-10 mt-1.5 rounded-2xl border border-line bg-surface p-1.5 shadow-(--shadow-pop)">
+          <Option type={null} picked={!value} onPick={pick} />
           {presets.map((t) => (
             <Option key={t.id} type={t} picked={t.id === value?.id} onPick={pick} />
           ))}
@@ -99,16 +100,23 @@ export function TypePicker({ types: saved, value, onChange }: Props) {
   );
 }
 
-function Option({ type, picked, onPick }: { type: RelationshipType; picked: boolean; onPick: (type: RelationshipType | null) => void }) {
+/** One type, or None for `type={null}`. */
+function Option({ type, picked, onPick }: { type: RelationshipType | null; picked: boolean; onPick: (type: RelationshipType | null) => void }) {
   return (
     <button
       type="button"
-      onClick={() => onPick(picked ? null : type)}
+      onClick={() => onPick(type)}
       aria-pressed={picked}
       className={`flex w-full items-center gap-3 rounded-[0.625rem] px-2.5 py-1.75 text-left text-[0.9375rem] ${picked ? "bg-paper" : "hover:bg-paper"}`}
     >
-      <span className="w-5 text-center text-xl leading-none">{type.emoji}</span>
-      <span className="flex-1 truncate">{type.name}</span>
+      {type ? (
+        <span className="w-5 text-center text-xl leading-none">{type.emoji}</span>
+      ) : (
+        <span className="flex w-5 justify-center">
+          <span className="size-3.5 rounded-full border-[1.25px] border-dashed border-muted" />
+        </span>
+      )}
+      <span className={`flex-1 truncate ${type ? "" : "text-muted"}`}>{type?.name ?? "None"}</span>
       {picked && <Check size="1rem" className="text-accent" />}
     </button>
   );
