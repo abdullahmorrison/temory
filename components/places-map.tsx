@@ -36,11 +36,30 @@ type Props = {
   ref?: Ref<PlacesMapHandle>;
 };
 
-/** The map's credit as an ⓘ that opens it, for pages that place it themselves. */
+// Who the map has to credit: OpenFreeMap serves it, built on OpenMapTiles and OpenStreetMap's data.
+const link = (href: string, text: string) => (
+  <a href={href} target="_blank" rel="noreferrer" className="underline-offset-2 hover:underline">
+    {text}
+  </a>
+);
+const OPENFREEMAP = link("https://openfreemap.org", "OpenFreeMap");
+const OPENMAPTILES = link("https://www.openmaptiles.org/", "© OpenMapTiles");
+const OPENSTREETMAP = link("https://www.openstreetmap.org/copyright", "OpenStreetMap");
+
+/** The map's credit as an ⓘ that opens it, for pages that place it themselves. A tap elsewhere closes it. */
 export function MapCredit({ className = "" }: { className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [open]);
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div ref={ref} className={`flex items-center gap-2 ${className}`}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -51,12 +70,20 @@ export function MapCredit({ className = "" }: { className?: string }) {
         <Info size="1.125rem" />
       </button>
       {open && (
-        <p className="rounded-xl bg-paper px-3 py-2 text-[0.6875rem] text-muted shadow-(--shadow-avatar) [&_a]:underline-offset-2 [&_a]:hover:underline">
-          <a href="https://openfreemap.org" target="_blank" rel="noreferrer">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank" rel="noreferrer">© OpenMapTiles</a>{" "}
-          Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>
+        <p className="rounded-xl bg-paper px-3 py-2 text-[0.6875rem] text-muted shadow-(--shadow-avatar)">
+          {OPENFREEMAP} {OPENMAPTILES} Data from {OPENSTREETMAP}
         </p>
       )}
     </div>
+  );
+}
+
+/** The short credit, for a map too small for the full one. */
+export function ShortMapCredit({ className = "" }: { className?: string }) {
+  return (
+    <span className={`rounded bg-paper/80 px-1.25 py-0.5 text-[0.5625rem] text-muted ${className}`}>
+      {OPENMAPTILES} © {OPENSTREETMAP}
+    </span>
   );
 }
 
