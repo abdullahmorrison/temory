@@ -2,6 +2,7 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Map as MapLibre, Marker } from "maplibre-gl";
+import { Info } from "lucide-react";
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { locateHomeArea, rememberHomeArea, savedHomeArea } from "@/lib/home-area";
 import { cityPoints } from "@/lib/map-frame";
@@ -29,14 +30,38 @@ type Props = {
   onBackground?: () => void;
   /** Room kept clear of the map's edges, like a sheet over its bottom, when centring on a place. */
   padding?: { top?: number; bottom?: number };
-  /** Where the map's credit goes: phones keep it at the top, clear of the sheet. */
-  credit?: "top-right" | "bottom-right";
+  /** Off when the page shows the map's credit itself (phones, as <MapCredit>). */
+  credit?: boolean;
   className?: string;
   ref?: Ref<PlacesMapHandle>;
 };
 
+/** The map's credit as an ⓘ that opens it, for pages that place it themselves. */
+export function MapCredit({ className = "" }: { className?: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-label="Map credits"
+        className="flex size-10 shrink-0 items-center justify-center rounded-full border border-line bg-paper text-muted shadow-(--shadow-avatar) transition-colors hover:border-muted"
+      >
+        <Info size="1.125rem" />
+      </button>
+      {open && (
+        <p className="rounded-xl bg-paper px-3 py-2 text-[0.6875rem] text-muted shadow-(--shadow-avatar) [&_a]:underline-offset-2 [&_a]:hover:underline">
+          <a href="https://openfreemap.org" target="_blank" rel="noreferrer">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank" rel="noreferrer">© OpenMapTiles</a>{" "}
+          Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>
+        </p>
+      )}
+    </div>
+  );
+}
+
 /** A map of places as numbered pins (how many people go there), the selected one in the accent colour. */
-export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, onBackground, preview, padding, credit = "bottom-right", className = "", ref }: Props) {
+export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, onBackground, preview, padding, credit = true, className = "", ref }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibre>();
   const markers = useRef<Marker[]>([]);
@@ -62,7 +87,7 @@ export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, o
         interactive: !preview,
         attributionControl: false,
       });
-      if (!preview) live.addControl(new maplibre.AttributionControl({ compact: false }), credit);
+      if (!preview && credit) live.addControl(new maplibre.AttributionControl({ compact: false }), "bottom-right");
       live.on("load", () => setMap(live));
       live.on("click", () => background.current?.());
     });
