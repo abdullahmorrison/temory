@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { openDb } from "./db";
-import { createActivity, deleteActivity, getActivity, listActivities, updateActivity } from "./activities";
+import { createActivity, deleteActivity, getActivity, listActivities, setActivityStatus, startDoing, updateActivity } from "./activities";
 import { createMoment } from "./moments";
 import { createPerson, deletePerson, getPerson } from "./people";
 
@@ -89,5 +89,36 @@ describe("deleting", () => {
     const a = createActivity(db, { name: "Hiking", icon: "mountain-snow", personIds: [sam.id] });
     deletePerson(db, sam.id);
     expect(getActivity(db, a.id)?.people).toEqual([]);
+  });
+});
+
+describe("activity status", () => {
+  it("starts as Doing, and keeps what's in the way of a Want to", () => {
+    const db = openDb(":memory:");
+    expect(createActivity(db, { name: "Chess", icon: "dices" })).toMatchObject({ status: "doing", inTheWay: "" });
+    const climbing = createActivity(db, { name: "Climbing", icon: "dices", status: "want", inTheWay: " need a gym close by " });
+    expect(climbing).toMatchObject({ status: "want", inTheWay: "need a gym close by" });
+    expect(() => createActivity(db, { name: "Golf", icon: "dices", status: "someday" })).toThrow("Unknown status");
+  });
+
+  it("lists Doing, then Want to, then Past", () => {
+    const db = openDb(":memory:");
+    const past = createActivity(db, { name: "Rugby", icon: "dices", status: "past" });
+    createActivity(db, { name: "Pottery", icon: "dices", status: "want" });
+    createActivity(db, { name: "Chess", icon: "dices" });
+    createMoment(db, { body: "Old match", date: "2026-01-01", time: "", personIds: [], activityIds: [past.id] });
+    expect(listActivities(db).map((a) => a.name)).toEqual(["Chess", "Pottery", "Rugby"]);
+  });
+
+  it("moves between statuses, and only Want to activities start being done", () => {
+    const db = openDb(":memory:");
+    const chess = createActivity(db, { name: "Chess", icon: "dices" });
+    const pottery = createActivity(db, { name: "Pottery", icon: "dices", status: "want" });
+    setActivityStatus(db, chess.id, "past");
+    startDoing(db, [chess.id, pottery.id]);
+    expect(getActivity(db, chess.id)?.status).toBe("past");
+    expect(getActivity(db, pottery.id)?.status).toBe("doing");
+    expect(() => setActivityStatus(db, 999, "doing")).toThrow("no longer exists");
+    expect(() => setActivityStatus(db, chess.id, "later")).toThrow("Unknown status");
   });
 });

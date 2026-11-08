@@ -13,6 +13,7 @@ import { initials } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
 import { tierLabel } from "@/lib/tiers";
 import { activityFromParams, countLabel } from "./data";
+import { ActivityStatusSwitch } from "./status";
 
 const LATEST = 3; // moments shown on the page before "All N moments"
 
@@ -37,7 +38,24 @@ async function Activity({ params }: { params: Promise<{ id: string }> }) {
         </div>
       </div>
 
-      <section className="mt-10 flex flex-col gap-2.5">
+      <div className="mt-6">
+        <ActivityStatusSwitch id={activity.id} status={activity.status} />
+      </div>
+
+      {activity.status === "want" && (
+        <section className="mt-8 flex flex-col gap-2.5">
+          <SectionLabel>What&apos;s in the way</SectionLabel>
+          {activity.inTheWay ? (
+            <p className="font-serif text-[1.0625rem]">{activity.inTheWay}</p>
+          ) : (
+            <Link href={edit} className="font-serif text-[1.0625rem] text-muted/70 hover:text-muted">
+              Add what&apos;s keeping you from it…
+            </Link>
+          )}
+        </section>
+      )}
+
+      <section className="mt-8 flex flex-col gap-2.5">
         <SectionLabel>With</SectionLabel>
         <ul className="flex flex-col">
           {activity.people.map((p) => {
