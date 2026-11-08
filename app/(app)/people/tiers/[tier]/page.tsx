@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { BackLink } from "@/components/back-link";
+import { EmojiBadge } from "@/components/emoji-badge";
 import { Panel } from "@/components/panel";
 import { dayLabel } from "@/lib/dates";
 import { getDb } from "@/lib/db";
@@ -33,8 +34,9 @@ async function TierList({ params }: { params: Promise<{ tier: string }> }) {
                 href={`/people/${p.id}`}
                 className="-mx-3 flex items-center gap-3.5 rounded-xl px-3 py-2.5 transition-colors hover:bg-surface/70 focus-visible:bg-surface/70 focus-visible:outline-none"
               >
-                <span className={`flex size-10 shrink-0 items-center justify-center rounded-full font-serif text-sm ring-2 ring-halo ${color.fill} ${color.ink}`}>
+                <span className={`relative flex size-10 shrink-0 items-center justify-center rounded-full font-serif text-sm ring-2 ring-halo ${color.fill} ${color.ink}`}>
                   {initials(p.name)}
+                  <EmojiBadge emoji={p.emoji} />
                 </span>
                 <span className="flex min-w-0 flex-col">
                   <span className="truncate text-[0.9375rem]">{p.name}</span>

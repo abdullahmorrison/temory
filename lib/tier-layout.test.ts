@@ -4,7 +4,7 @@ import { TIERS } from "./tiers";
 
 const phone = { width: 402, height: 800, top: 100, bottom: 140, tiers: TIERS };
 const people = (n: number, closeness: number): LayoutPerson[] =>
-  Array.from({ length: n }, (_, i) => ({ id: closeness * 100 + i, name: `P${String(i).padStart(2, "0")}`, closeness, color: 0 }));
+  Array.from({ length: n }, (_, i) => ({ id: closeness * 100 + i, name: `P${String(i).padStart(2, "0")}`, closeness, color: 0, emoji: "" }));
 
 describe("layoutTiers", () => {
   it("puts the closest tier lowest on screen", () => {

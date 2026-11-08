@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useOptimistic, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { movePerson } from "@/app/(app)/people/actions";
 import { usePressDrag, type Point } from "@/components/use-press-drag";
+import { EmojiBadge } from "@/components/emoji-badge";
 import { firstName, initials } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
 import { layoutTiers, tierAt, type LayoutPerson } from "@/lib/tier-layout";
@@ -195,6 +196,7 @@ export function PeopleTiers({ people: saved }: { people: LayoutPerson[] }) {
               className={`pointer-events-none absolute top-0 left-0 z-10 flex items-center justify-center rounded-full font-serif shadow-(--shadow-drag) ${face(drag.person).className}`}
             >
               {face(drag.person).text}
+              <EmojiBadge emoji={drag.person.emoji} />
             </span>
           )}
 
@@ -311,9 +313,10 @@ function PersonBubble({ person, x, y, size, pad, delay, selected, lifted, onDrag
       <div style={{ animationDelay: `${delay}ms` }} className="flex flex-col items-center gap-1.5 motion-safe:animate-pop-in">
         <span
           style={{ width: size, height: size, fontSize: Math.round(size * 0.34) }}
-          className={`flex items-center justify-center rounded-full font-serif shadow-(--shadow-avatar) transition group-hover:shadow-(--shadow-avatar-lift) group-focus-visible:ring-ink group-active:scale-95 motion-safe:group-hover:-translate-y-0.5 ${look.className}`}
+          className={`relative flex items-center justify-center rounded-full font-serif shadow-(--shadow-avatar) transition group-hover:shadow-(--shadow-avatar-lift) group-focus-visible:ring-ink group-active:scale-95 motion-safe:group-hover:-translate-y-0.5 ${look.className}`}
         >
           {look.text}
+          <EmojiBadge emoji={person.emoji} />
         </span>
         <span className={`max-w-full truncate text-xs ${selected ? "font-medium" : person.closeness >= ACQUAINTANCE ? "text-muted" : ""}`}>
           {firstName(person.name)}

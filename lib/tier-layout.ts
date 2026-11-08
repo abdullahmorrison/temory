@@ -1,7 +1,7 @@
 // Geometry for the People screen: closeness tiers drawn as arcs around a point below the screen,
 // closest tier at the bottom (near the thumb). Pure math so it can be tested without a browser.
 
-export type LayoutPerson = { id: number; name: string; closeness: number; color: number };
+export type LayoutPerson = { id: number; name: string; closeness: number; color: number; emoji: string };
 
 export type Band = { tier: number; label: string; count: number; outerRadius: number; labelY: number };
 export type Bubble = { kind: "person"; person: LayoutPerson; x: number; y: number; size: number };
