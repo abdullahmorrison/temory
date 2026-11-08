@@ -55,7 +55,7 @@ describe("deleteType", () => {
     const db = openDb(":memory:");
     const t = createType(db, { name: "Climber", emoji: "🧗" });
     const jess = createPerson(db, { name: "Jess", typeId: t.id });
-    expect(listTypes(db).find((x) => x.id === t.id)?.people).toBe(1);
+    expect(listTypes(db).find((x) => x.id === t.id)?.people).toEqual([{ id: jess.id, name: "Jess" }]);
     deleteType(db, t.id);
     expect(listTypes(db).some((x) => x.id === t.id)).toBe(false);
     expect(getPerson(db, jess.id)).toMatchObject({ typeId: null, emoji: "" });

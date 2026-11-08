@@ -4,18 +4,22 @@ import { Check, ChevronDown, Pencil, Plus, SmilePlus, Trash2 } from "lucide-reac
 import { useEffect, useRef, useState, useTransition } from "react";
 import { addRelationshipType, editRelationshipType, removeRelationshipType, type TypeResult } from "@/app/(app)/people/actions";
 import { lastEmoji } from "@/lib/emoji";
+import { listNames } from "@/lib/names";
 import type { RelationshipType } from "@/lib/relationship-types";
 
-type Props = { types: RelationshipType[]; value: RelationshipType | null; onChange: (id: number | null) => void };
+// `person` is whoever the form is for, so the warning before deleting a type can name them.
+type Props = { types: RelationshipType[]; value: RelationshipType | null; onChange: (id: number | null) => void; person: Person };
+type Person = { id?: number; name: string };
 
 // What the list is doing besides picking: making a type, or editing or deleting one of yours.
 type Mode = { kind: "pick" } | { kind: "new" } | { kind: "edit"; id: number } | { kind: "delete"; id: number };
 
 /**
  * A dropdown of relationship types that floats over the form: None, presets, then yours, then a row to
- * make a new one. Your own types can be edited or deleted from it. Escape or a tap outside closes it.
+ * make a new one. Your own types can be edited or deleted from it. Escape backs out of an edit, then
+ * closes it, as does a tap outside.
  */
-export function TypePicker({ types, value, onChange }: Props) {
+export function TypePicker({ types, value, onChange, person }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>({ kind: "pick" });
@@ -30,7 +34,9 @@ export function TypePicker({ types, value, onChange }: Props) {
       if (!ref.current?.contains(e.target as Node)) close();
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key !== "Escape") return;
+      if (mode.kind === "pick") close();
+      else setMode({ kind: "pick" });
     };
     document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
@@ -38,7 +44,7 @@ export function TypePicker({ types, value, onChange }: Props) {
       document.removeEventListener("pointerdown", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, mode.kind]);
 
   const pick = (id: number | null) => {
     onChange(id);
@@ -81,17 +87,22 @@ export function TypePicker({ types, value, onChange }: Props) {
               mode.kind === "edit" && mode.id === t.id ? (
                 <div key={t.id}>
                   <TypeEditor type={t} submitLabel="Save" save={(name, emoji) => editRelationshipType(t.id, name, emoji)} onSaved={back} />
-                  <button
-                    type="button"
-                    onClick={() => setMode({ kind: "delete", id: t.id })}
-                    className="flex items-center gap-2 rounded-[0.625rem] px-2.5 py-1.75 text-sm text-accent hover:bg-paper"
-                  >
-                    <Trash2 size="0.875rem" />
-                    Delete type
-                  </button>
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setMode({ kind: "delete", id: t.id })}
+                      className="flex items-center gap-2 rounded-[0.625rem] px-2.5 py-1.75 text-sm text-accent hover:bg-paper"
+                    >
+                      <Trash2 size="0.875rem" />
+                      Delete type
+                    </button>
+                    <button type="button" onClick={back} className="rounded-[0.625rem] px-2.5 py-1.75 text-sm text-muted hover:text-ink">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               ) : mode.kind === "delete" && mode.id === t.id ? (
-                <ConfirmDelete key={t.id} type={t} onDone={back} />
+                <ConfirmDeleteType key={t.id} type={t} who={whoLoses(t, person, t.id === value?.id)} onDone={back} />
               ) : (
                 <div key={t.id} className="flex items-center">
                   <Option type={t} picked={t.id === value?.id} onPick={pick} />
@@ -218,8 +229,17 @@ function TypeEditor({
   );
 }
 
-/** Asks before deleting one of your types, saying how many people it leaves without one. */
-function ConfirmDelete({ type, onDone }: { type: RelationshipType; onDone: () => void }) {
+/**
+ * Who deleting a type leaves without one: those saved with it, going by this form's pick for its own
+ * person, since that's what saving the form will keep.
+ */
+function whoLoses(type: RelationshipType, person: Person, picked: boolean) {
+  const others = type.people.filter((p) => p.id !== person.id).map((p) => p.name);
+  return picked ? [person.name.trim() || "This person", ...others] : others;
+}
+
+/** Asks before deleting one of your types, naming who it leaves without one. */
+function ConfirmDeleteType({ type, who, onDone }: { type: RelationshipType; who: string[]; onDone: () => void }) {
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
   const remove = () =>
@@ -228,7 +248,6 @@ function ConfirmDelete({ type, onDone }: { type: RelationshipType; onDone: () =>
       if (result.error) setError(result.error);
       else onDone();
     });
-  const who = type.people === 0 ? "Nobody has it yet." : `${type.people === 1 ? "1 person" : `${type.people} people`} will have no type. Nothing else about them changes.`;
 
   return (
     <div className="flex flex-col gap-2.5 rounded-[0.625rem] bg-paper p-3">
@@ -236,7 +255,7 @@ function ConfirmDelete({ type, onDone }: { type: RelationshipType; onDone: () =>
         Delete {type.emoji} {type.name}?
       </p>
       <p className={`text-xs ${error ? "text-accent" : "text-muted"}`} aria-live="polite">
-        {error || who}
+        {error || (who.length ? `${listNames(who)} will have no type. Nothing else about them changes.` : "Nobody has it yet.")}
       </p>
       <div className="flex items-center gap-4">
         <button

@@ -15,7 +15,7 @@ type Props = {
   submitLabel: string;
   color: number; // the person's avatar color, for the preview
   types: RelationshipType[];
-  defaults?: { name: string; closeness: number; typeId: number | null; notes: string };
+  defaults?: { id: number; name: string; closeness: number; typeId: number | null; notes: string };
 };
 
 export function PersonForm({ action, submitLabel, color, types, defaults }: Props) {
@@ -49,7 +49,7 @@ export function PersonForm({ action, submitLabel, color, types, defaults }: Prop
 
       <div className="flex flex-col gap-3">
         <SectionLabel as="span">Relationship type</SectionLabel>
-        <TypePicker types={types} value={type} onChange={setTypeId} />
+        <TypePicker types={types} value={type} onChange={setTypeId} person={{ id: defaults?.id, name }} />
         <input type="hidden" name="typeId" value={type?.id ?? ""} />
       </div>
 

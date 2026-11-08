@@ -1,21 +1,26 @@
-import { count, desc, eq } from "drizzle-orm";
+import { desc, eq, isNotNull, sql } from "drizzle-orm";
 import { people, relationshipTypes } from "@/db/schema";
 import type { Db } from "@/lib/db";
 import { isOneEmoji } from "@/lib/emoji";
 
-/** `people` is how many people have the type, for the warning before deleting it. */
-export type RelationshipType = { id: number; name: string; emoji: string; preset: boolean; people: number };
+/** `people` is who has the type, A to Z, for the warning before deleting it. */
+export type RelationshipType = { id: number; name: string; emoji: string; preset: boolean; people: { id: number; name: string }[] };
 type TypeInput = { name: string; emoji: string };
 
 /** Presets in the order the migration lists them (the kinds you add most often first), then yours as you added them. */
 export function listTypes(db: Db): RelationshipType[] {
-  return db
-    .select({ id: relationshipTypes.id, name: relationshipTypes.name, emoji: relationshipTypes.emoji, preset: relationshipTypes.preset, people: count(people.id) })
-    .from(relationshipTypes)
-    .leftJoin(people, eq(people.typeId, relationshipTypes.id))
-    .groupBy(relationshipTypes.id)
-    .orderBy(desc(relationshipTypes.preset), relationshipTypes.id)
+  const who = db
+    .select({ typeId: people.typeId, id: people.id, name: people.name })
+    .from(people)
+    .where(isNotNull(people.typeId))
+    .orderBy(sql`${people.name} collate nocase`)
     .all();
+  return db
+    .select({ id: relationshipTypes.id, name: relationshipTypes.name, emoji: relationshipTypes.emoji, preset: relationshipTypes.preset })
+    .from(relationshipTypes)
+    .orderBy(desc(relationshipTypes.preset), relationshipTypes.id)
+    .all()
+    .map((t) => ({ ...t, people: who.filter((p) => p.typeId === t.id).map(({ id, name }) => ({ id, name })) }));
 }
 
 /** Trims and checks a name and emoji; throws a message fit to show the user. `id` is the type being edited. */
