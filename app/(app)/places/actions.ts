@@ -36,7 +36,7 @@ export async function addPlace(_prev: PlaceFormState, form: FormData): Promise<P
   } catch (e) {
     return { error: message(e) };
   }
-  // Back to the whole city, so the new pin is seen among the others.
+  // Back to the whole city, so the pin is seen among the others. Editing does the same.
   done("/places");
 }
 
@@ -46,7 +46,7 @@ export async function editPlace(id: number, _prev: PlaceFormState, form: FormDat
   } catch (e) {
     return { error: message(e) };
   }
-  done(`/places?place=${id}`);
+  done("/places");
 }
 
 export async function removePlace(id: number) {

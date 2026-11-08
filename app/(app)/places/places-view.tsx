@@ -2,8 +2,8 @@
 
 import { ChevronRight, LocateFixed, MapPin, Plus } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useDraftPin } from "@/components/draft-pin";
 import { EmojiBadge } from "@/components/emoji-badge";
 import { PlacesMap, type MapPlace, type PlacesMapHandle } from "@/components/places-map";
@@ -50,10 +50,18 @@ export function DeskMap({ places }: { places: Place[] }) {
   // While a place is being edited, its new pin stands in for the saved one.
   const pins = useMemo(() => toMap(places.filter((p) => p.id !== draft?.placeId)), [places, draft?.placeId]);
   const map = useRef<PlacesMapHandle>(null);
+  // Coming back from adding or editing a place frames the whole city again.
+  const path = usePathname();
+  const [lastPath, setLastPath] = useState(path);
+  const [returns, setReturns] = useState(0);
+  if (path !== lastPath) {
+    setLastPath(path);
+    if (path === "/places" && lastPath.startsWith("/places/")) setReturns(returns + 1);
+  }
   if (!desk) return null;
   return (
     <div className="relative h-dvh min-w-0 flex-1">
-      <PlacesMap ref={map} places={pins} selectedId={selected} draft={draft} onSelect={select} onBackground={() => select()} className="size-full" />
+      <PlacesMap ref={map} places={pins} selectedId={selected} frameKey={returns} draft={draft} onSelect={select} onBackground={() => select()} className="size-full" />
       <LocateButton map={map} className="absolute right-6 bottom-12" />
     </div>
   );

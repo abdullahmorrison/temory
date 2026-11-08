@@ -21,6 +21,8 @@ type Props = {
   onSelect?: (id: number) => void;
   /** A small map that only shows where a place is: no panning, no labels. */
   preview?: boolean;
+  /** Change it to frame the city again, as when coming back from a place form. */
+  frameKey?: number;
   /** An address picked but not saved yet, shown as a plain pin and centred on. */
   draft?: { title: string; lat: number; lng: number } | null;
   /** A tap on the map itself, not a pin. */
@@ -34,7 +36,7 @@ type Props = {
 };
 
 /** A map of places as numbered pins (how many people go there), the selected one in the accent colour. */
-export function PlacesMap({ places, selectedId, draft, onSelect, onBackground, preview, padding, credit = "bottom-right", className = "", ref }: Props) {
+export function PlacesMap({ places, selectedId, frameKey = 0, draft, onSelect, onBackground, preview, padding, credit = "bottom-right", className = "", ref }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibre>();
   const markers = useRef<Marker[]>([]);
@@ -171,8 +173,8 @@ export function PlacesMap({ places, selectedId, draft, onSelect, onBackground, p
   }, [map, draft]);
 
   // Frame the city your places are in, leaving out far-off ones. Again whenever a place is added or
-  // removed, unless one is selected; otherwise the map only moves to follow the selection.
-  const placeIds = places.map((p) => p.id).join();
+  // removed or `frameKey` changes, unless one is selected; otherwise the map only follows the selection.
+  const placeIds = `${places.map((p) => p.id).join()}|${frameKey}`;
   const framed = useRef<string>(undefined);
   useEffect(() => {
     if (!map || !places.length || framed.current === placeIds) return;
