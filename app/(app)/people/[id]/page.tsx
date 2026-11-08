@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { BackLink } from "@/components/back-link";
+import { EmojiBadge } from "@/components/emoji-badge";
 import { Panel } from "@/components/panel";
 import { MomentItem } from "@/components/moment-item";
 import { SectionLabel } from "@/components/section-label";
@@ -28,9 +29,10 @@ async function Profile({ params }: { params: Promise<{ id: string }> }) {
 
       <div className="mt-6 flex flex-col items-center gap-1.5 text-center desk:flex-row desk:gap-4 desk:text-left">
         <span
-          className={`flex size-22 shrink-0 items-center justify-center rounded-full font-serif text-[2rem] shadow-(--shadow-avatar) ring-2 ring-halo ${color.fill} ${color.ink}`}
+          className={`relative flex size-22 shrink-0 items-center justify-center rounded-full font-serif text-[2rem] shadow-(--shadow-avatar) ring-2 ring-halo ${color.fill} ${color.ink}`}
         >
           {initials(person.name)}
+          <EmojiBadge emoji={person.emoji} />
         </span>
         <div>
           <h1 className="mt-2 text-[1.75rem] font-medium desk:mt-0 desk:text-2xl">{person.name}</h1>

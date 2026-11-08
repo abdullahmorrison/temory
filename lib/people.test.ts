@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { openDb } from "./db";
 import { entries, entryPeople } from "@/db/schema";
 import { createPerson, deletePerson, getPerson, listPeople, listTier, moveToTier, updatePerson } from "./people";
+import { listTypes } from "./relationship-types";
 import { NEW_PERSON_CLOSENESS } from "./tiers";
 
 describe("createPerson", () => {
@@ -9,6 +10,16 @@ describe("createPerson", () => {
     const db = openDb(":memory:");
     const colors = ["Sam", "Priya", "Jordan", "Leila", "Marcus", "Theo"].map((name) => createPerson(db, { name }).color);
     expect(new Set(colors).size).toBe(6);
+  });
+
+  it("shows the emoji of the person's relationship type as their badge", () => {
+    const db = openDb(":memory:");
+    const coworker = listTypes(db).find((t) => t.name === "Coworker")!;
+    const sam = createPerson(db, { name: "Sam", typeId: coworker.id });
+    const priya = createPerson(db, { name: "Priya" });
+    expect(getPerson(db, sam.id)?.emoji).toBe("💼");
+    expect(getPerson(db, priya.id)?.emoji).toBe("");
+    expect(listPeople(db).map((p) => [p.name, p.emoji])).toEqual([["Priya", ""], ["Sam", "💼"]]);
   });
 
   it("puts new people in the outermost tier and trims the name", () => {
@@ -119,9 +130,9 @@ describe("listTier", () => {
     log("2026-09-01", noor.id);
     log("2026-10-01", dev.id);
     expect(listTier(db, NEW_PERSON_CLOSENESS)).toEqual([
-      { id: noor.id, name: "Noor", color: noor.color, lastMoment: "2026-09-01" },
-      { id: dev.id, name: "Dev", color: dev.color, lastMoment: "2026-10-01" },
-      { id: eli.id, name: "Eli", color: eli.color, lastMoment: "2026-01-05" },
+      { id: noor.id, name: "Noor", color: noor.color, emoji: "", lastMoment: "2026-09-01" },
+      { id: dev.id, name: "Dev", color: dev.color, emoji: "", lastMoment: "2026-10-01" },
+      { id: eli.id, name: "Eli", color: eli.color, emoji: "", lastMoment: "2026-01-05" },
     ]);
   });
 });

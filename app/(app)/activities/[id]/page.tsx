@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ActivityBadge } from "@/components/activity-icon";
 import { BackLink } from "@/components/back-link";
+import { EmojiBadge } from "@/components/emoji-badge";
 import { Panel } from "@/components/panel";
 import { MomentItem } from "@/components/moment-item";
 import { SectionLabel } from "@/components/section-label";
@@ -44,8 +45,9 @@ async function Activity({ params }: { params: Promise<{ id: string }> }) {
             return (
               <li key={p.id}>
                 <Link href={`/people/${p.id}`} className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-surface/60">
-                  <span className={`flex size-10 shrink-0 items-center justify-center rounded-full font-serif text-[0.9375rem] ring-2 ring-halo ${c.fill} ${c.ink}`}>
+                  <span className={`relative flex size-10 shrink-0 items-center justify-center rounded-full font-serif text-[0.9375rem] ring-2 ring-halo ${c.fill} ${c.ink}`}>
                     {initials(p.name)}
+                    <EmojiBadge emoji={p.emoji} />
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-[0.9375rem]">{p.name}</span>

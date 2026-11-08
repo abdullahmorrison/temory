@@ -1,31 +1,59 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { PersonFormState } from "@/app/(app)/people/actions";
+import { EmojiBadge } from "@/components/emoji-badge";
 import { SectionLabel } from "@/components/section-label";
+import { TypePicker } from "@/components/type-picker";
+import { initials } from "@/lib/names";
+import { personColor } from "@/lib/person-colors";
+import type { RelationshipType } from "@/lib/relationship-types";
 import { NEW_PERSON_CLOSENESS, TIERS } from "@/lib/tiers";
 import { useCloseOnDone } from "@/components/nav-stack";
 
 type Props = {
   action: (prev: PersonFormState, form: FormData) => Promise<PersonFormState>;
   submitLabel: string;
-  defaults?: { name: string; closeness: number; notes: string };
+  color: number; // the person's avatar color, for the preview
+  types: RelationshipType[];
+  defaults?: { id: number; name: string; closeness: number; typeId: number | null; notes: string };
 };
 
-export function PersonForm({ action, submitLabel, defaults }: Props) {
+export function PersonForm({ action, submitLabel, color, types, defaults }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
   useCloseOnDone(state);
+  const [name, setName] = useState(defaults?.name ?? "");
+  const [typeId, setTypeId] = useState(defaults?.typeId ?? null);
+  // Read from the list each render, so a type renamed or deleted from the dropdown shows that right away.
+  const type = types.find((t) => t.id === typeId) ?? null;
+  const c = personColor(color);
   return (
     <form action={formAction} className="flex flex-col gap-8">
-      <input
-        name="name"
-        required
-        autoFocus={!defaults}
-        autoComplete="off"
-        placeholder="Name"
-        defaultValue={defaults?.name}
-        className="border-b border-line bg-transparent pb-2 font-serif text-3xl outline-none placeholder:text-muted/60 focus:border-ink"
-      />
+      <div className="flex items-center gap-4">
+        <span
+          aria-hidden
+          className={`relative flex size-16 shrink-0 items-center justify-center rounded-full font-serif text-[1.375rem] shadow-(--shadow-avatar) ring-2 ring-halo ${c.fill} ${c.ink}`}
+        >
+          {initials(name)}
+          <EmojiBadge emoji={type?.emoji ?? ""} />
+        </span>
+        <input
+          name="name"
+          required
+          autoFocus={!defaults}
+          autoComplete="off"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="min-w-0 flex-1 border-b border-line bg-transparent pb-2 font-serif text-3xl outline-none placeholder:text-muted/60 focus:border-ink"
+        />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <SectionLabel as="span">Relationship type</SectionLabel>
+        <TypePicker types={types} value={type} onChange={setTypeId} person={{ id: defaults?.id, name }} />
+        <input type="hidden" name="typeId" value={type?.id ?? ""} />
+      </div>
 
       <fieldset className="flex flex-col gap-3">
         <SectionLabel as="legend" className="mb-3">
@@ -71,3 +99,4 @@ export function PersonForm({ action, submitLabel, defaults }: Props) {
     </form>
   );
 }
+

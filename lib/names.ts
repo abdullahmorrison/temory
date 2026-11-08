@@ -9,3 +9,9 @@ export function initials(name: string) {
 export function firstName(name: string) {
   return name.trim().split(/\s+/)[0] ?? "";
 }
+
+/** "Jess", "Jess and Sam", "Jess and 2 others". */
+export function listNames([first, ...rest]: string[]) {
+  if (rest.length === 0) return first;
+  return rest.length === 1 ? `${first} and ${rest[0]}` : `${first} and ${rest.length} others`;
+}
