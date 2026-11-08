@@ -5,7 +5,7 @@ import { BackLink } from "@/components/back-link";
 import { EmojiBadge } from "@/components/emoji-badge";
 import { Panel } from "@/components/panel";
 import { dayLabel } from "@/lib/dates";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { initials } from "@/lib/names";
 import { listTier } from "@/lib/people";
 import { personColor } from "@/lib/person-colors";
@@ -14,10 +14,11 @@ import { PanelLink } from "@/components/nav-stack";
 
 async function TierList({ params }: { params: Promise<{ tier: string }> }) {
   await connection(); // read the database per request, not at build time
+  const my = await signedIn();
   const value = Number((await params).tier);
   const tier = TIERS.find((t) => t.value === value);
   if (!tier) notFound();
-  const people = listTier(getDb(), tier.value);
+  const people = listTier(my, tier.value);
   return (
     <Panel close={{ href: "/people", label: "Close" }}>
       <BackLink href="/people" label="Back to people" />

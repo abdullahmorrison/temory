@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createActivity, deleteActivity, setActivityStatus, updateActivity } from "@/lib/activities";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 
 // done is where to go once the form has saved.
 export type ActivityFormState = { error?: string; done?: string };
@@ -29,9 +29,10 @@ function message(e: unknown) {
 }
 
 export async function addActivity(_prev: ActivityFormState, form: FormData): Promise<ActivityFormState> {
+  const my = await signedIn();
   let id: number;
   try {
-    id = createActivity(getDb(), read(form)).id;
+    id = createActivity(my, read(form)).id;
   } catch (e) {
     return { error: message(e) };
   }
@@ -39,8 +40,9 @@ export async function addActivity(_prev: ActivityFormState, form: FormData): Pro
 }
 
 export async function editActivity(id: number, _prev: ActivityFormState, form: FormData): Promise<ActivityFormState> {
+  const my = await signedIn();
   try {
-    updateActivity(getDb(), id, read(form));
+    updateActivity(my, id, read(form));
   } catch (e) {
     return { error: message(e) };
   }
@@ -49,8 +51,9 @@ export async function editActivity(id: number, _prev: ActivityFormState, form: F
 
 /** The Doing · Want to · Past switch on an activity's page. */
 export async function changeActivityStatus(id: number, status: string): Promise<ActivityFormState> {
+  const my = await signedIn();
   try {
-    setActivityStatus(getDb(), id, status);
+    setActivityStatus(my, id, status);
   } catch (e) {
     return { error: message(e) };
   }
@@ -59,6 +62,7 @@ export async function changeActivityStatus(id: number, status: string): Promise<
 }
 
 export async function removeActivity(id: number) {
-  deleteActivity(getDb(), id);
+  const my = await signedIn();
+  deleteActivity(my, id);
   return done("/activities");
 }

@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getDb } from "@/lib/db";
+import type { UserDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { startDoing } from "@/lib/activities";
 import { createMoment, deleteMoment, updateMoment } from "@/lib/moments";
 
@@ -21,9 +22,9 @@ function read(form: FormData) {
 }
 
 // Want to activities you said yes to counting as something you do now, as you logged them.
-function nowDoing(form: FormData) {
+function nowDoing(my: UserDb, form: FormData) {
   const ids = form.getAll("nowDoing").map(Number);
-  startDoing(getDb(), ids);
+  startDoing(my, ids);
   if (ids.length) revalidatePath("/activities", "layout");
 }
 
@@ -39,9 +40,10 @@ function message(e: unknown) {
 }
 
 export async function addMoment(_prev: MomentFormState, form: FormData): Promise<MomentFormState> {
+  const my = await signedIn();
   try {
-    createMoment(getDb(), read(form));
-    nowDoing(form);
+    createMoment(my, read(form));
+    nowDoing(my, form);
   } catch (e) {
     return { error: message(e) };
   }
@@ -49,9 +51,10 @@ export async function addMoment(_prev: MomentFormState, form: FormData): Promise
 }
 
 export async function editMoment(id: number, back: string, _prev: MomentFormState, form: FormData): Promise<MomentFormState> {
+  const my = await signedIn();
   try {
-    updateMoment(getDb(), id, read(form));
-    nowDoing(form);
+    updateMoment(my, id, read(form));
+    nowDoing(my, form);
   } catch (e) {
     return { error: message(e) };
   }
@@ -59,6 +62,7 @@ export async function editMoment(id: number, back: string, _prev: MomentFormStat
 }
 
 export async function removeMoment(id: number, back: string) {
-  deleteMoment(getDb(), id);
+  const my = await signedIn();
+  deleteMoment(my, id);
   return done(back);
 }

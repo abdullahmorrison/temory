@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { createPlace, deletePlace, updatePlace } from "@/lib/places";
 
 // done is where to go once the form has saved.
@@ -31,8 +31,9 @@ function message(e: unknown) {
 }
 
 export async function addPlace(_prev: PlaceFormState, form: FormData): Promise<PlaceFormState> {
+  const my = await signedIn();
   try {
-    createPlace(getDb(), read(form));
+    createPlace(my, read(form));
   } catch (e) {
     return { error: message(e) };
   }
@@ -41,8 +42,9 @@ export async function addPlace(_prev: PlaceFormState, form: FormData): Promise<P
 }
 
 export async function editPlace(id: number, _prev: PlaceFormState, form: FormData): Promise<PlaceFormState> {
+  const my = await signedIn();
   try {
-    updatePlace(getDb(), id, read(form));
+    updatePlace(my, id, read(form));
   } catch (e) {
     return { error: message(e) };
   }
@@ -50,6 +52,7 @@ export async function editPlace(id: number, _prev: PlaceFormState, form: FormDat
 }
 
 export async function removePlace(id: number) {
-  deletePlace(getDb(), id);
+  const my = await signedIn();
+  deletePlace(my, id);
   return done("/places");
 }

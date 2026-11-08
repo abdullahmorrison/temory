@@ -3,14 +3,15 @@ import { BackLink } from "@/components/back-link";
 import { MomentItem } from "@/components/moment-item";
 import { Panel } from "@/components/panel";
 import { SectionLabel } from "@/components/section-label";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { groupByMonth, listMoments } from "@/lib/moments";
 import { tierLabel } from "@/lib/tiers";
 import { personFromParams } from "../data";
 
 async function Timeline({ params }: { params: Promise<{ id: string }> }) {
+  const my = await signedIn();
   const person = await personFromParams(params);
-  const moments = listMoments(getDb(), { personId: person.id });
+  const moments = listMoments(my, { personId: person.id });
   return (
     <Panel close={{ href: "/people", label: "Close" }}>
       <BackLink href={`/people/${person.id}`} label={`Back to ${person.name}`} everywhere />

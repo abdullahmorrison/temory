@@ -4,11 +4,12 @@ import { ActivityForm } from "@/components/activity-form";
 import { BackLink } from "@/components/back-link";
 import { ConfirmDelete } from "@/components/confirm-delete";
 import { Panel } from "@/components/panel";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { listPeople } from "@/lib/people";
 import { activityFromParams } from "../data";
 
 async function Edit({ params }: { params: Promise<{ id: string }> }) {
+  const my = await signedIn();
   const activity = await activityFromParams(params);
   const back = `/activities/${activity.id}`;
   const defaults = { ...activity, personIds: activity.people.map((p) => p.id) };
@@ -20,7 +21,7 @@ async function Edit({ params }: { params: Promise<{ id: string }> }) {
       <ActivityForm
         key={JSON.stringify(defaults)}
         action={editActivity.bind(null, activity.id)}
-        people={listPeople(getDb())}
+        people={listPeople(my)}
         submitLabel="Save"
         defaults={defaults}
       />

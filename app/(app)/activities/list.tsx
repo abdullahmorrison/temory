@@ -4,7 +4,7 @@ import { ActivityBadge } from "@/components/activity-icon";
 import { Faces } from "@/components/faces";
 import { SectionLabel } from "@/components/section-label";
 import { listActivities } from "@/lib/activities";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { firstName } from "@/lib/names";
 import { RowLink } from "./row-link";
 import { PanelLink } from "@/components/nav-stack";
@@ -22,7 +22,8 @@ type Activity = ReturnType<typeof listActivities>[number];
 /** Every activity: what you do now, then what you'd like to (faded), then what's behind you (folded away). */
 export async function ActivityList() {
   await connection(); // read the database per request, not at build time
-  const activities = listActivities(getDb());
+  const my = await signedIn();
+  const activities = listActivities(my);
   const doing = activities.filter((a) => a.status === "doing");
   const want = activities.filter((a) => a.status === "want");
   const past = activities.filter((a) => a.status === "past");

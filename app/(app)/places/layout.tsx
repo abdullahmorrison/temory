@@ -1,12 +1,13 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { listPlaces } from "@/lib/places";
 import { DeskMap } from "./places-view";
 
 async function Map() {
   await connection(); // read the database per request, not at build time
-  return <DeskMap places={listPlaces(getDb())} />;
+  const my = await signedIn();
+  return <DeskMap places={listPlaces(my)} />;
 }
 
 // On desktop the map stays on screen for every /places route, with the list or a form beside it.

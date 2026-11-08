@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { createPerson, deletePerson, moveToTier, updatePerson } from "@/lib/people";
 import { createType, deleteType, updateType } from "@/lib/relationship-types";
 
@@ -29,8 +29,9 @@ function message(e: unknown) {
 }
 
 export async function addPerson(_prev: PersonFormState, form: FormData): Promise<PersonFormState> {
+  const my = await signedIn();
   try {
-    createPerson(getDb(), read(form));
+    createPerson(my, read(form));
   } catch (e) {
     return { error: message(e) };
   }
@@ -38,8 +39,9 @@ export async function addPerson(_prev: PersonFormState, form: FormData): Promise
 }
 
 export async function editPerson(id: number, _prev: PersonFormState, form: FormData): Promise<PersonFormState> {
+  const my = await signedIn();
   try {
-    updatePerson(getDb(), id, read(form));
+    updatePerson(my, id, read(form));
   } catch (e) {
     return { error: message(e) };
   }
@@ -47,7 +49,8 @@ export async function editPerson(id: number, _prev: PersonFormState, form: FormD
 }
 
 export async function removePerson(id: number) {
-  deletePerson(getDb(), id);
+  const my = await signedIn();
+  deletePerson(my, id);
   return done("/people");
 }
 
@@ -66,21 +69,25 @@ function typeChange(change: () => number | void): TypeResult {
 
 /** Makes a relationship type of your own from the person form, which then picks it. */
 export async function addRelationshipType(name: string, emoji: string) {
-  return typeChange(() => createType(getDb(), { name, emoji }).id);
+  const my = await signedIn();
+  return typeChange(() => createType(my, { name, emoji }).id);
 }
 
 export async function editRelationshipType(id: number, name: string, emoji: string) {
-  return typeChange(() => updateType(getDb(), id, { name, emoji }).id);
+  const my = await signedIn();
+  return typeChange(() => updateType(my, id, { name, emoji }).id);
 }
 
 export async function removeRelationshipType(id: number) {
-  return typeChange(() => deleteType(getDb(), id));
+  const my = await signedIn();
+  return typeChange(() => deleteType(my, id));
 }
 
 /** Drag-and-drop between tiers. Returns an error instead of redirecting, so the arcs can snap back. */
 export async function movePerson(id: number, closeness: number): Promise<PersonFormState> {
+  const my = await signedIn();
   try {
-    moveToTier(getDb(), id, closeness);
+    moveToTier(my, id, closeness);
   } catch (e) {
     return { error: message(e) };
   }

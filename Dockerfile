@@ -14,6 +14,9 @@ ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000 DATABASE_PATH=/app/data/crm.d
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
+# For resetting a password: docker exec -it <container> node scripts/reset-password.mts <email>
+COPY --from=build --chown=node:node /app/scripts ./scripts
+COPY --from=build --chown=node:node /app/lib/password.ts ./lib/password.ts
 RUN mkdir data && chown node:node data
 USER node
 VOLUME /app/data

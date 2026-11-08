@@ -4,13 +4,14 @@ import { addPerson } from "@/app/(app)/people/actions";
 import { BackLink } from "@/components/back-link";
 import { Panel } from "@/components/panel";
 import { PersonForm } from "@/components/person-form";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { nextPersonColor } from "@/lib/people";
 import { listTypes } from "@/lib/relationship-types";
 
 async function Form() {
   await connection(); // read the database per request, not at build time
-  return <PersonForm action={addPerson} submitLabel="Add person" color={nextPersonColor(getDb())} types={listTypes(getDb())} />;
+  const my = await signedIn();
+  return <PersonForm action={addPerson} submitLabel="Add person" color={nextPersonColor(my)} types={listTypes(my)} />;
 }
 
 export default function NewPersonPage() {

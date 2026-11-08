@@ -3,12 +3,13 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { MomentItem } from "@/components/moment-item";
 import { SectionLabel } from "@/components/section-label";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { groupByDay, groupByMonth, listMoments } from "@/lib/moments";
 
 async function Feed() {
   await connection(); // read the database per request, not at build time
-  const moments = listMoments(getDb());
+  const my = await signedIn();
+  const moments = listMoments(my);
 
   if (moments.length === 0) {
     return (
