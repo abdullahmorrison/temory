@@ -29,6 +29,11 @@ Keep each change focused on one thing. Before committing, run the checks:
     npm run typecheck
     npm test
 
+For changes to how pages behave, also run the end-to-end tests. They build the app and drive it in a real browser, at phone and desktop sizes, on a throwaway database:
+
+    npx playwright install chromium   # once
+    npm run test:e2e
+
 ## Commit messages
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org):
