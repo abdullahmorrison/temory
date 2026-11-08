@@ -8,6 +8,10 @@ Personal, uncommitted instructions can go in `AGENTS.local.md` (ignored by git).
 
 Don't build UI that isn't designed in [Figma](https://www.figma.com/design/uJ4q0ZprJmswMsRah2ud2O). If a feature changes what's on screen and the design doesn't exist yet, design it there first and build only once it's approved.
 
+## Nouns connect
+
+People, activities, and places each link to every other. Keep it that way, including for new nouns: see [docs/nouns.md](docs/nouns.md).
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know
