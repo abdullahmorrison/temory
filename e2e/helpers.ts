@@ -31,23 +31,26 @@ export const isPhone = (info: TestInfo) => info.project.name === "phone";
 export const field = (page: Page, placeholder: string) => page.getByPlaceholder(placeholder).filter({ visible: true });
 
 /** The moment editor. */
-export const editor = (page: Page) => page.locator(".ProseMirror").filter({ visible: true });
+export const editor = (page: Page) => page.getByRole("textbox", { name: "What happened?" }).filter({ visible: true });
 
-/** Clicks the visible link to `href`: phones and desktop each hide the other's copy of the nav. */
-export async function follow(page: Page, href: string) {
-  await page.locator(`a[href="${href}"]:visible`).first().click();
+/** A link on screen by its name. A string must match the whole name; a regex can match part of it. */
+export const link = (page: Page, name: string | RegExp) => page.getByRole("link", { name, exact: typeof name === "string" }).filter({ visible: true });
+
+/** Follows a link by its name and waits until it lands on `href`. */
+export async function follow(page: Page, name: string | RegExp, href: string | RegExp) {
+  await link(page, name).click();
   await expect(page).toHaveURL(href);
 }
 
-/** Opens a link by its text, like a person's bubble or a moment in the journal. */
+/** Opens a link that contains `text`, like a person's bubble or a moment in a list. */
 export async function open(page: Page, text: string) {
-  await page.locator("a", { hasText: text }).filter({ visible: true }).first().click();
+  await link(page, new RegExp(text)).click(); // test names are plain words, safe as a pattern
 }
 
 /** Adds a person from People and waits until the form has closed. */
 export async function addPerson(page: Page, name: string) {
   await page.goto("/people");
-  await follow(page, "/people/new");
+  await follow(page, "Add person", "/people/new");
   await field(page, "Name").fill(name);
   await page.getByRole("button", { name: "Add person" }).click();
   await expect(page).toHaveURL("/people");
@@ -55,7 +58,7 @@ export async function addPerson(page: Page, name: string) {
 
 /** Writes a moment from the Log button and waits until the form has closed. */
 export async function logMoment(page: Page, text: string) {
-  await follow(page, "/write");
+  await follow(page, "Log a moment", "/write");
   await editor(page).click();
   await page.keyboard.type(text);
   await page.getByRole("button", { name: "Save" }).click();
@@ -65,7 +68,7 @@ export async function logMoment(page: Page, text: string) {
 /** Adds an activity from Activities and waits until its page opens. Returns that page's path. */
 export async function addActivity(page: Page, name: string, status: "Doing" | "Want to" | "Past" = "Doing") {
   await page.goto("/activities");
-  await follow(page, "/activities/new");
+  await follow(page, "Add activity", "/activities/new");
   await field(page, "Name").fill(name);
   if (status !== "Doing") await page.getByRole("radio", { name: status }).click();
   await page.getByRole("button", { name: "Add activity" }).click();

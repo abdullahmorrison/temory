@@ -5,15 +5,14 @@ import { addPerson, confirmDelete, expect, field, follow, isPhone, open, openPro
 test("switching tabs doesn't add to history, so Back leaves the app", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL("/people");
-  for (const tab of ["/journal", "/activities", "/places", "/people"]) await follow(page, tab);
+  for (const [tab, href] of [["Journal", "/journal"], ["Activities", "/activities"], ["Places", "/places"], ["People", "/people"]]) await follow(page, tab, href);
   await page.goBack();
   await expect(page).toHaveURL("about:blank");
 });
 
 test("a profile sits on top of People on phones, and beside it on desktop", async ({ page }, info) => {
-  const name = "Priya";
-  await addPerson(page, name);
-  await open(page, name);
+  await addPerson(page, "Priya");
+  await open(page, "Priya");
   await expect(page).toHaveURL(/\/people\/\d+$/);
   await page.goBack();
   // On desktop the profile opened in place of what was beside the list, so Back leaves the app.
@@ -21,13 +20,9 @@ test("a profile sits on top of People on phones, and beside it on desktop", asyn
 });
 
 test("Back after saving a form doesn't reopen it", async ({ page }, info) => {
-  const name = "Jordan";
-  await addPerson(page, name);
-  await open(page, name);
-  await expect(page).toHaveURL(/\/people\/\d+$/);
-  const profile = new URL(page.url()).pathname;
-
-  await follow(page, `${profile}/edit`);
+  await addPerson(page, "Jordan");
+  const profile = await openProfile(page, "Jordan");
+  await follow(page, "Edit", `${profile}/edit`);
   await field(page, "Name").fill("Jordy");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page).toHaveURL(profile);
@@ -38,11 +33,10 @@ test("Back after saving a form doesn't reopen it", async ({ page }, info) => {
 });
 
 test("Back after deleting doesn't return to what was deleted", async ({ page }) => {
-  const name = "Ravi";
-  await addPerson(page, name);
-  const profile = await openProfile(page, name);
-  await follow(page, `${profile}/edit`);
-  await confirmDelete(page, `Delete ${name}`);
+  await addPerson(page, "Ravi");
+  const profile = await openProfile(page, "Ravi");
+  await follow(page, "Edit", `${profile}/edit`);
+  await confirmDelete(page, "Delete Ravi");
   await expect(page).toHaveURL("/people");
   await page.goBack();
   await expect(page).not.toHaveURL(new RegExp(profile));
@@ -50,19 +44,16 @@ test("Back after deleting doesn't return to what was deleted", async ({ page }) 
 
 test("a missing page offers a way back to People that leaves no trail", async ({ page }) => {
   await page.goto("/no-such-page");
-  await expect(page.getByText("This page doesn't exist.", { exact: false })).toBeVisible();
-  await page.getByRole("link", { name: "Go to people" }).click();
-  await expect(page).toHaveURL("/people");
+  await expect(page.getByText("This page doesn't exist.")).toBeVisible();
+  await follow(page, "Go to people", "/people");
   await page.goBack();
   await expect(page).toHaveURL("about:blank");
 });
 
 test("on desktop, the panel's ✕ closes what's beside the list", async ({ page }, info) => {
   test.skip(isPhone(info), "phones show pages full screen, closed with Back instead");
-  const name = "Ines";
-  await addPerson(page, name);
-  await open(page, name);
+  await addPerson(page, "Ines");
+  await open(page, "Ines");
   await expect(page).toHaveURL(/\/people\/\d+$/);
-  await page.getByRole("link", { name: "Back to people" }).or(page.locator('a[aria-label][href="/people"]')).filter({ visible: true }).first().click();
-  await expect(page).toHaveURL("/people");
+  await follow(page, "Close", "/people");
 });
