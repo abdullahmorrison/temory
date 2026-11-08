@@ -3,10 +3,12 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Map as MapLibre, Marker } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
+import { locateHomeArea, savedHomeArea } from "@/lib/home-area";
 
 // OpenFreeMap: free, no key, no limits. Its style carries the credit the map has to show.
 const STYLE = "https://tiles.openfreemap.org/styles/positron";
 const CLOSE_ZOOM = 14;
+const CITY_ZOOM = 11;
 
 export type MapPlace = { id: number; title: string; count: number; lat: number; lng: number };
 
@@ -76,6 +78,20 @@ export function PlacesMap({ places, selectedId, onSelect, onBackground, preview,
       cancelled = true;
     };
   }, [map, places, selectedId, preview, onSelect]);
+
+  // No places yet: open on your city, asking where you are the first time.
+  useEffect(() => {
+    if (!map || places.length || preview) return;
+    const saved = savedHomeArea();
+    if (saved) return void map.jumpTo({ center: [saved.lng, saved.lat], zoom: CITY_ZOOM });
+    let cancelled = false;
+    locateHomeArea().then((area) => {
+      if (area && !cancelled) map.easeTo({ center: [area.lng, area.lat], zoom: CITY_ZOOM });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [map, places.length, preview]);
 
   // Frame every place once; after that, only move to follow the selection.
   useEffect(() => {

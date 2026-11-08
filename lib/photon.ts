@@ -1,6 +1,8 @@
 // Address search with Photon (photon.komoot.io): free, no key, made for search-as-you-type, and built
 // on OpenStreetMap. Its public server is fair use, so callers wait for a pause in typing.
 
+import { savedHomeArea } from "@/lib/home-area";
+
 export type AddressResult = { name: string; address: string; area: string; lat: number; lng: number };
 
 type Feature = {
@@ -17,9 +19,10 @@ export function toResult({ geometry, properties: p }: Feature): AddressResult {
   return { name, address: [...new Set(parts)].join(", "), area: p.district || p.locality || p.city || p.county || p.state || "", lat, lng };
 }
 
-/** Up to five places matching what was typed. */
+/** Up to five places matching what was typed, those near your city first when it's known. */
 export async function searchAddresses(query: string, signal?: AbortSignal): Promise<AddressResult[]> {
-  const url = `https://photon.komoot.io/api/?limit=5&q=${encodeURIComponent(query)}`;
+  const near = savedHomeArea();
+  const url = `https://photon.komoot.io/api/?limit=5&q=${encodeURIComponent(query)}${near ? `&lat=${near.lat}&lon=${near.lng}` : ""}`;
   const response = await fetch(url, { signal });
   if (!response.ok) throw new Error("Address search isn't answering. Try again in a moment.");
   const { features } = (await response.json()) as { features: Feature[] };
