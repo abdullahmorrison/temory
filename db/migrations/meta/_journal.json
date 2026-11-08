@@ -43,6 +43,13 @@
       "when": 1794096592705,
       "tag": "0005_relationship_types",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794110147533,
+      "tag": "0006_place_address",
+      "breakpoints": true
     }
   ]
 }

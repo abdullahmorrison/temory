@@ -12,14 +12,17 @@ export async function MomentPanel({ momentId, back }: { momentId: string; back: 
   const id = Number(momentId);
   const moment = Number.isInteger(id) ? getMoment(getDb(), id) : undefined;
   if (!moment) notFound();
+  const defaults = formDefaults(moment);
   return (
     <Panel>
+      {/* Keyed by what's saved: Next keeps a left page alive with its state, so a reopened form would hold the values from before. */}
       <MomentForm
+        key={JSON.stringify(defaults)}
         action={editMoment.bind(null, moment.id, back)}
         people={await peopleForPicker()}
         activities={await activitiesForPicker()}
         closeHref={back}
-        defaults={formDefaults(moment)}
+        defaults={defaults}
       />
       <div className="mt-14 border-t border-line pt-6">
         <ConfirmDelete label="Delete this moment" warning="Delete this moment? This can't be undone." action={removeMoment.bind(null, moment.id, back)} />

@@ -12,14 +12,17 @@ async function Edit({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
   const moment = Number.isInteger(id) ? getMoment(getDb(), id) : undefined;
   if (!moment) notFound();
+  const defaults = formDefaults(moment);
   return (
     <>
+      {/* Keyed by what's saved: Next keeps a left page alive with its state, so a reopened form would hold the values from before. */}
       <MomentForm
+        key={JSON.stringify(defaults)}
         action={editMoment.bind(null, moment.id, "/journal")}
         people={people}
         activities={await activitiesForPicker()}
         closeHref="/journal"
-        defaults={formDefaults(moment)}
+        defaults={defaults}
       />
       <div className="mt-14 border-t border-line pt-6">
         <ConfirmDelete label="Delete this moment" warning="Delete this moment? This can't be undone." action={removeMoment.bind(null, moment.id, "/journal")} />
