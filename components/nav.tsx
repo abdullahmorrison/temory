@@ -43,14 +43,16 @@ export function LogButton({ className = "" }: { className?: string }) {
 }
 
 // Form screens have their own submit button, so the floating one would compete with it.
-const FORM_ROUTES = [/^\/write$/, /^\/journal\/\d+\/edit$/, /^\/people\/new$/, /^\/people\/\d+\/edit$/];
+const FORM_ROUTES = [/^\/write$/, /^\/journal\/\d+\/edit$/, /^\/people\/new$/, /^\/people\/\d+\/edit$/, /^\/places\/new$/, /^\/places\/\d+\/edit$/];
+// The Places map, where a place's sheet takes the button's spot.
+const NO_LOG_BUTTON = [...FORM_ROUTES, /^\/places$/];
 
-/** Phones: floating Log a moment button above the tab bar, hidden on form screens. */
+/** Phones: floating Log a moment button above the tab bar, hidden on form screens and the Places map. */
 export function FloatingLogButton() {
   return (
     <WithPath
       render={(path) =>
-        path === null || FORM_ROUTES.some((route) => route.test(path)) ? null : (
+        path === null || NO_LOG_BUTTON.some((route) => route.test(path)) ? null : (
           <LogButton className="fixed right-4 bottom-[calc(max(env(safe-area-inset-bottom),12px)+76px)] z-20 desk:hidden" />
         )
       }

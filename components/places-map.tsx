@@ -1,0 +1,131 @@
+"use client";
+
+import "maplibre-gl/dist/maplibre-gl.css";
+import type { Map as MapLibre, Marker } from "maplibre-gl";
+import { useEffect, useRef, useState } from "react";
+
+// OpenFreeMap: free, no key, no limits. Its style carries the credit the map has to show.
+const STYLE = "https://tiles.openfreemap.org/styles/positron";
+const CLOSE_ZOOM = 14;
+
+export type MapPlace = { id: number; title: string; count: number; lat: number; lng: number };
+
+type Props = {
+  places: MapPlace[];
+  selectedId?: number;
+  onSelect?: (id: number) => void;
+  /** A small map that only shows where a place is: no panning, no labels. */
+  preview?: boolean;
+  /** A tap on the map itself, not a pin. */
+  onBackground?: () => void;
+  /** Room kept clear of the map's edges, like a sheet over its bottom, when centring on a place. */
+  padding?: { top?: number; bottom?: number };
+  /** Where the map's credit goes: phones keep it at the top, clear of the sheet. */
+  credit?: "top-right" | "bottom-right";
+  className?: string;
+};
+
+/** A map of places as numbered pins (how many people go there), the selected one in the accent colour. */
+export function PlacesMap({ places, selectedId, onSelect, onBackground, preview, padding, credit = "bottom-right", className = "" }: Props) {
+  const box = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<MapLibre>();
+  const markers = useRef<Marker[]>([]);
+  const fitted = useRef(false);
+  const background = useRef(onBackground);
+  useEffect(() => {
+    background.current = onBackground;
+  });
+
+  // MapLibre needs the browser, so it loads on the client after the first render.
+  useEffect(() => {
+    let live: MapLibre | undefined;
+    let cancelled = false;
+    import("maplibre-gl").then(({ default: maplibre }) => {
+      if (cancelled || !box.current) return;
+      live = new maplibre.Map({
+        container: box.current,
+        style: STYLE,
+        center: [0, 20],
+        zoom: 1.5,
+        interactive: !preview,
+        attributionControl: false,
+      });
+      if (!preview) live.addControl(new maplibre.AttributionControl({ compact: false }), credit);
+      live.on("load", () => setMap(live));
+      live.on("click", () => background.current?.());
+    });
+    return () => {
+      cancelled = true;
+      live?.remove();
+    };
+  }, [preview, credit]);
+
+  // Pins, redrawn whenever the places or the selection change.
+  useEffect(() => {
+    if (!map) return;
+    let cancelled = false;
+    import("maplibre-gl").then(({ default: maplibre }) => {
+      if (cancelled) return;
+      markers.current.forEach((m) => m.remove());
+      markers.current = places.map((p) =>
+        // A pin's dot sits on the spot, its name below.
+        new maplibre.Marker({ element: pin(p, p.id === selectedId, preview, onSelect), anchor: preview ? "bottom" : "top", offset: preview ? [0, 0] : [0, -14] }).setLngLat([p.lng, p.lat]).addTo(map),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [map, places, selectedId, preview, onSelect]);
+
+  // Frame every place once; after that, only move to follow the selection.
+  useEffect(() => {
+    if (!map || fitted.current || !places.length) return;
+    fitted.current = true;
+    const pad = { top: 120 + (padding?.top ?? 0), bottom: 60 + (padding?.bottom ?? 0), left: 60, right: 60 };
+    if (places.length === 1 || preview) map.jumpTo({ center: [places[0].lng, places[0].lat], zoom: preview ? 15 : CLOSE_ZOOM });
+    else map.fitBounds(bounds(places), { padding: pad, maxZoom: CLOSE_ZOOM, duration: 0 });
+  }, [map, places, preview, padding]);
+
+  useEffect(() => {
+    const place = places.find((p) => p.id === selectedId);
+    if (!map || !place || preview) return;
+    map.easeTo({ center: [place.lng, place.lat], zoom: Math.max(map.getZoom(), CLOSE_ZOOM - 1), padding: { top: padding?.top ?? 0, bottom: padding?.bottom ?? 0, left: 0, right: 0 } });
+  }, [map, places, selectedId, preview, padding]);
+
+  return <div ref={box} className={`bg-surface ${className}`} />;
+}
+
+function bounds(places: MapPlace[]): [[number, number], [number, number]] {
+  const lngs = places.map((p) => p.lng);
+  const lats = places.map((p) => p.lat);
+  return [
+    [Math.min(...lngs), Math.min(...lats)],
+    [Math.max(...lngs), Math.max(...lats)],
+  ];
+}
+
+/** A dot with the number of people and the place's name under it, or a plain pin for a preview. */
+function pin(place: MapPlace, selected: boolean, preview?: boolean, onSelect?: (id: number) => void) {
+  if (preview) {
+    const el = document.createElement("div");
+    el.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" fill="var(--color-accent)" stroke="var(--color-paper)" stroke-width="1.5"/><circle cx="12" cy="10" r="3" fill="var(--color-paper)"/></svg>`;
+    return el;
+  }
+  const el = document.createElement("button");
+  el.type = "button";
+  el.setAttribute("aria-label", `${place.title}, ${place.count} ${place.count === 1 ? "person" : "people"}`);
+  el.setAttribute("aria-pressed", String(selected));
+  el.className = `flex cursor-pointer flex-col items-center gap-1 ${selected ? "z-10" : ""}`;
+  const dot = document.createElement("span");
+  dot.className = `flex size-7 items-center justify-center rounded-full border-2 border-paper text-xs font-medium text-paper shadow-(--shadow-avatar) ${selected ? "bg-accent" : "bg-ink"}`;
+  dot.textContent = String(place.count);
+  const label = document.createElement("span");
+  label.className = "max-w-32 truncate rounded-md bg-paper/90 px-1.5 py-0.5 text-[0.6875rem] font-medium text-ink";
+  label.textContent = place.title;
+  el.append(dot, label);
+  el.addEventListener("click", (e) => {
+    e.stopPropagation();
+    onSelect?.(place.id);
+  });
+  return el;
+}
