@@ -75,6 +75,7 @@ export const activities = sqliteTable("activities", {
   name: text("name").notNull(),
   icon: text("icon").notNull(), // a key of ACTIVITY_ICONS in lib/activity-icons.ts
   notes: text("notes").notNull().default(""),
+  status: text("status", { enum: ["doing", "want", "past"] }).notNull().default("doing"), // where it is in your life
   createdAt: createdAt(),
 });
 

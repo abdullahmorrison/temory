@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
+import { startDoing } from "@/lib/activities";
 import { createMoment, deleteMoment, updateMoment } from "@/lib/moments";
 
 // done is where to go once the form has saved.
@@ -19,6 +20,13 @@ function read(form: FormData) {
   };
 }
 
+// Want to activities you said yes to counting as something you do now, as you logged them.
+function nowDoing(form: FormData) {
+  const ids = form.getAll("nowDoing").map(Number);
+  startDoing(getDb(), ids);
+  if (ids.length) revalidatePath("/activities", "layout");
+}
+
 // back is where the form was opened from, so saving returns there: the journal, or a person's page.
 function done(back = "/journal") {
   revalidatePath("/journal");
@@ -33,6 +41,7 @@ function message(e: unknown) {
 export async function addMoment(_prev: MomentFormState, form: FormData): Promise<MomentFormState> {
   try {
     createMoment(getDb(), read(form));
+    nowDoing(form);
   } catch (e) {
     return { error: message(e) };
   }
@@ -42,6 +51,7 @@ export async function addMoment(_prev: MomentFormState, form: FormData): Promise
 export async function editMoment(id: number, back: string, _prev: MomentFormState, form: FormData): Promise<MomentFormState> {
   try {
     updateMoment(getDb(), id, read(form));
+    nowDoing(form);
   } catch (e) {
     return { error: message(e) };
   }

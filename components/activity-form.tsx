@@ -5,15 +5,17 @@ import { useActionState, useState } from "react";
 import type { ActivityFormState } from "@/app/(app)/activities/actions";
 import { ActivityIcon } from "@/components/activity-icon";
 import { SectionLabel } from "@/components/section-label";
+import { StatusSwitch } from "@/components/status-switch";
 import { WithPeople } from "@/components/with-people";
 import { DEFAULT_ACTIVITY_ICON, searchIcons } from "@/lib/activity-icons";
 import { useCloseOnDone } from "@/components/nav-stack";
+import type { ActivityStatus } from "@/lib/activity-status";
 
 type Props = {
   action: (prev: ActivityFormState, form: FormData) => Promise<ActivityFormState>;
   people: { id: number; name: string; color: number }[];
   submitLabel: string;
-  defaults?: { name: string; icon: string; notes: string; personIds: number[] };
+  defaults?: { name: string; icon: string; status: ActivityStatus; notes: string; personIds: number[] };
 };
 
 export function ActivityForm({ action, people, submitLabel, defaults }: Props) {
@@ -22,6 +24,7 @@ export function ActivityForm({ action, people, submitLabel, defaults }: Props) {
   const [icon, setIcon] = useState(defaults?.icon ?? DEFAULT_ACTIVITY_ICON);
   const [picking, setPicking] = useState(false);
   const [chosen, setChosen] = useState(defaults?.personIds ?? []);
+  const [status, setStatus] = useState<ActivityStatus>(defaults?.status ?? "doing");
 
   return (
     <>
@@ -45,6 +48,12 @@ export function ActivityForm({ action, people, submitLabel, defaults }: Props) {
             defaultValue={defaults?.name}
             className="min-w-0 flex-1 border-b border-line bg-transparent pb-2 font-serif text-3xl outline-none placeholder:text-muted/60 focus:border-ink"
           />
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <SectionLabel as="span">In my life</SectionLabel>
+          <StatusSwitch label="In my life" value={status} onChange={setStatus} />
+          <input type="hidden" name="status" value={status} />
         </div>
 
         <div className="flex flex-col gap-3">
