@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useCallback, useEffect } from "react";
 import { useIsDesk } from "@/components/use-is-desk";
 import { type Arrival, arrive, close as closePlan, level, type Plan } from "@/lib/nav-stack";
 
@@ -82,16 +82,21 @@ export function close(router: Router, href: string, { refresh = false } = {}) {
   follow(router, { ...plan, replace: plan.replace ?? href }, refresh);
 }
 
-/** Once a form's action reports where it's done, closes the form to there, refetching what's there. */
-export function useCloseOnDone(state: { done?: string }) {
+/**
+ * Wraps a form's action so that once it reports where it's done, the form closes to there, refetching
+ * what's there. It closes as the action returns, not from an effect: saving can remount an edit form
+ * (it's keyed by what's saved), and a page Next kept alive re-runs its effects when you come back.
+ */
+export function useCloseOnDone<S extends { done?: string }>(action: (prev: S, form: FormData) => Promise<S>) {
   const router = useRouter();
-  // Next keeps a left page alive and re-runs its effects on return, so each result closes the form only once.
-  const handled = useRef(state);
-  useEffect(() => {
-    if (!state.done || handled.current === state) return;
-    handled.current = state;
-    close(router, state.done, { refresh: true });
-  }, [state, router]);
+  return useCallback(
+    async (prev: S, form: FormData) => {
+      const next = await action(prev, form);
+      if (next.done) close(router, next.done, { refresh: true });
+      return next;
+    },
+    [action, router],
+  );
 }
 
 type LinkProps = Omit<React.ComponentProps<typeof Link>, "href" | "onNavigate" | "replace"> & { href: string };
