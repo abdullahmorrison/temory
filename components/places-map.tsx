@@ -4,6 +4,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { Map as MapLibre, Marker } from "maplibre-gl";
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { locateHomeArea, savedHomeArea } from "@/lib/home-area";
+import { cityPoints } from "@/lib/map-frame";
 
 // OpenFreeMap: free, no key, no limits. Its style carries the credit the map has to show.
 const STYLE = "https://tiles.openfreemap.org/styles/positron";
@@ -37,7 +38,6 @@ export function PlacesMap({ places, selectedId, draft, onSelect, onBackground, p
   const box = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibre>();
   const markers = useRef<Marker[]>([]);
-  const fitted = useRef(false);
   const background = useRef(onBackground);
   useEffect(() => {
     background.current = onBackground;
@@ -167,14 +167,20 @@ export function PlacesMap({ places, selectedId, draft, onSelect, onBackground, p
     };
   }, [map, draft]);
 
-  // Frame every place once; after that, only move to follow the selection.
+  // Frame the city your places are in, leaving out far-off ones. Again whenever a place is added or
+  // removed, unless one is selected; otherwise the map only moves to follow the selection.
+  const placeIds = places.map((p) => p.id).join();
+  const framed = useRef<string>(undefined);
   useEffect(() => {
-    if (!map || fitted.current || !places.length) return;
-    fitted.current = true;
+    if (!map || !places.length || framed.current === placeIds) return;
+    const first = framed.current === undefined;
+    framed.current = placeIds;
+    if (!first && selectedId) return;
     const pad = { top: 120 + (padding?.top ?? 0), bottom: 60 + (padding?.bottom ?? 0), left: 60, right: 60 };
-    if (places.length === 1 || preview) map.jumpTo({ center: [places[0].lng, places[0].lat], zoom: preview ? 15 : CLOSE_ZOOM });
-    else map.fitBounds(bounds(places), { padding: pad, maxZoom: CLOSE_ZOOM, duration: 0 });
-  }, [map, places, preview, padding]);
+    const city = cityPoints(places);
+    if (city.length === 1 || preview) map.jumpTo({ center: [city[0].lng, city[0].lat], zoom: preview ? 15 : CLOSE_ZOOM });
+    else map.fitBounds(bounds(city), { padding: pad, maxZoom: CLOSE_ZOOM, duration: first ? 0 : 600 });
+  }, [map, places, placeIds, selectedId, preview, padding]);
 
   useEffect(() => {
     const place = places.find((p) => p.id === selectedId);

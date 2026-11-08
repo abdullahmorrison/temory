@@ -31,13 +31,13 @@ function message(e: unknown) {
 }
 
 export async function addPlace(_prev: PlaceFormState, form: FormData): Promise<PlaceFormState> {
-  let id: number;
   try {
-    id = createPlace(getDb(), read(form)).id;
+    createPlace(getDb(), read(form));
   } catch (e) {
     return { error: message(e) };
   }
-  done(`/places?place=${id}`);
+  // Back to the whole city, so the new pin is seen among the others.
+  done("/places");
 }
 
 export async function editPlace(id: number, _prev: PlaceFormState, form: FormData): Promise<PlaceFormState> {
