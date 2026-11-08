@@ -50,6 +50,13 @@
       "when": 1794110147533,
       "tag": "0006_place_address",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794159851615,
+      "tag": "0007_activity_status",
+      "breakpoints": true
     }
   ]
 }

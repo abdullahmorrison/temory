@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createActivity, deleteActivity, updateActivity } from "@/lib/activities";
+import { createActivity, deleteActivity, setActivityStatus, updateActivity } from "@/lib/activities";
 import { getDb } from "@/lib/db";
 
 export type ActivityFormState = { error?: string };
@@ -11,6 +11,7 @@ function read(form: FormData) {
   return {
     name: String(form.get("name") ?? ""),
     icon: String(form.get("icon") ?? ""),
+    status: String(form.get("status") ?? "doing"),
     notes: String(form.get("notes") ?? ""),
     personIds: form.getAll("personIds").map(Number),
   };
@@ -44,6 +45,17 @@ export async function editActivity(id: number, _prev: ActivityFormState, form: F
     return { error: message(e) };
   }
   done(`/activities/${id}`);
+}
+
+/** The Doing · Want to · Past switch on an activity's page. */
+export async function changeActivityStatus(id: number, status: string): Promise<ActivityFormState> {
+  try {
+    setActivityStatus(getDb(), id, status);
+  } catch (e) {
+    return { error: message(e) };
+  }
+  revalidatePath("/activities", "layout");
+  return {};
 }
 
 export async function removeActivity(id: number) {

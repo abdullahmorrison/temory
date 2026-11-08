@@ -13,7 +13,7 @@ import { localNow, localToday, longDate, momentTime, timeLabel } from "@/lib/dat
 import { linkedAfterHandEdit, mentionedActivityIds, mentionedIds, syncWith } from "@/lib/mentions";
 
 type Person = { id: number; name: string; color: number };
-type Activity = { id: number; name: string; icon: string };
+type Activity = { id: number; name: string; icon: string; status?: string };
 
 type Props = {
   action: (prev: MomentFormState, form: FormData) => Promise<MomentFormState>;
@@ -47,6 +47,10 @@ export function MomentForm({ action, people, activities, defaults, closeHref }: 
   const { chosen } = withState;
   // What it was spent doing, tracked the same way.
   const [doing, setDoing] = useState({ chosen: defaults?.activityIds ?? [], linked: defaults?.activityViaMention ?? [] });
+  // A Want to activity in this moment asks once whether it's something you do now; yes moves it to Doing on save.
+  const [answered, setAnswered] = useState<number[]>([]);
+  const [nowDoing, setNowDoing] = useState<number[]>([]);
+  const asking = activities.find((a) => a.status === "want" && doing.chosen.includes(a.id) && !answered.includes(a.id));
 
   return (
     <form action={formAction} className="flex flex-col">
@@ -86,6 +90,20 @@ export function MomentForm({ action, people, activities, defaults, closeHref }: 
           onLock={(id) => setDoing((d) => locked(d, id))}
         />
       </div>
+      {asking && (
+        <WantToPrompt
+          name={asking.name}
+          onAnswer={(yes) => {
+            setAnswered((ids) => [...ids, asking.id]);
+            if (yes) setNowDoing((ids) => [...ids, asking.id]);
+          }}
+        />
+      )}
+      {nowDoing
+        .filter((id) => doing.chosen.includes(id))
+        .map((id) => (
+          <input key={id} type="hidden" name="nowDoing" value={id} />
+        ))}
       {chosen.map((id) => (
         <input key={id} type="hidden" name="personIds" value={id} />
       ))}
@@ -118,6 +136,27 @@ export function MomentForm({ action, people, activities, defaults, closeHref }: 
         </p>
       )}
     </form>
+  );
+}
+
+/** "Pottery is on your want-to list. Count it as something you do now?" */
+function WantToPrompt({ name, onAnswer }: { name: string; onAnswer: (yes: boolean) => void }) {
+  return (
+    <div className="mt-6 rounded-2xl bg-surface px-4 py-3.5" aria-live="polite">
+      <p className="text-sm">{name} is on your want-to list. Count it as something you do now?</p>
+      <div className="mt-3 flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => onAnswer(true)}
+          className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-on-accent transition hover:brightness-110 active:scale-[0.98]"
+        >
+          Yes, I do it now
+        </button>
+        <button type="button" onClick={() => onAnswer(false)} className="text-sm text-muted hover:text-ink">
+          Not yet
+        </button>
+      </div>
+    </div>
   );
 }
 

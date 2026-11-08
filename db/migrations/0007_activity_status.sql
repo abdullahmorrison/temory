@@ -1,0 +1,1 @@
+ALTER TABLE `activities` ADD `status` text DEFAULT 'doing' NOT NULL;
