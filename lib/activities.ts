@@ -57,7 +57,7 @@ export function setActivityStatus(db: Db, id: number, status: string) {
 }
 
 /** Counts Want to activities as ones you do now, as when you log a moment doing them. Others stay as they are. */
-export function startDoing(db: Db | Tx, ids: number[]) {
+export function startDoing(db: Db, ids: number[]) {
   if (ids.length) db.update(activities).set({ status: "doing" }).where(and(inArray(activities.id, ids), eq(activities.status, "want"))).run();
 }
 

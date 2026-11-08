@@ -48,9 +48,14 @@ export async function editActivity(id: number, _prev: ActivityFormState, form: F
 }
 
 /** The Doing · Want to · Past switch on an activity's page. */
-export async function changeActivityStatus(id: number, status: string) {
-  setActivityStatus(getDb(), id, status);
+export async function changeActivityStatus(id: number, status: string): Promise<ActivityFormState> {
+  try {
+    setActivityStatus(getDb(), id, status);
+  } catch (e) {
+    return { error: message(e) };
+  }
   revalidatePath("/activities", "layout");
+  return {};
 }
 
 export async function removeActivity(id: number) {
