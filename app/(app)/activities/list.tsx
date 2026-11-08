@@ -93,7 +93,7 @@ function Rows({ activities, className }: { activities: Activity[]; className: st
 
 const momentCount = (n: number) => `${n} ${n === 1 ? "moment" : "moments"}`;
 
-/** Doing: who it's with. Want to and Past are faded; Want to says whether you've done it and what's in the way. */
+/** Who it's with. Want to and Past are faded, and a Want to shows what's in the way instead, if you said. */
 function Row({ activity: a }: { activity: Activity }) {
   const faded = a.status !== "doing";
   return (
@@ -106,8 +106,8 @@ function Row({ activity: a }: { activity: Activity }) {
           <span className={`truncate text-[1.0625rem] font-medium ${faded ? "text-muted" : ""}`}>{a.name}</span>
           {(a.moments > 0 || !faded) && <span className="shrink-0 text-xs text-muted">{momentCount(a.moments)}</span>}
         </span>
-        {a.status === "want" ? (
-          <span className="truncate text-[0.8125rem] text-muted">{[a.moments ? "Want it back" : "Never tried", a.inTheWay].filter(Boolean).join(" · ")}</span>
+        {a.status === "want" && a.inTheWay ? (
+          <span className="truncate text-[0.8125rem] text-muted first-letter:uppercase">{a.inTheWay}</span>
         ) : a.people.length > 0 ? (
           <span className={`flex items-center gap-2 text-[0.8125rem] text-muted ${faded ? "opacity-70" : ""}`}>
             <Faces people={a.people} />
