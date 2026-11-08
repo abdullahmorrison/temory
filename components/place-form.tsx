@@ -4,6 +4,7 @@ import { MapPin, Search, Shield } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import type { PlaceFormState } from "@/app/(app)/places/actions";
 import { setDraftPin } from "@/components/draft-pin";
+import { useCloseOnDone } from "@/components/nav-stack";
 import { PlacesMap, ShortMapCredit } from "@/components/places-map";
 import { SectionLabel } from "@/components/section-label";
 import { useIsDesk } from "@/components/use-is-desk";
@@ -25,6 +26,7 @@ type Props = {
 /** An address picked from a search, what you call the place, and who goes there. */
 export function PlaceForm({ action, people, submitLabel, placeId, around, defaults }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
+  useCloseOnDone(state);
   const [address, setAddress] = useState<AddressResult | null>(defaults ?? null);
   const [chosen, setChosen] = useState(defaults?.personIds ?? []);
 

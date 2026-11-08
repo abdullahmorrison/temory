@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createActivity, deleteActivity, setActivityStatus, updateActivity } from "@/lib/activities";
 import { getDb } from "@/lib/db";
 
-export type ActivityFormState = { error?: string };
+// done is where to go once the form has saved.
+export type ActivityFormState = { error?: string; done?: string };
 
 function read(form: FormData) {
   return {
@@ -19,9 +19,9 @@ function read(form: FormData) {
 
 // The list lives in the /activities layout on desktop, which Next.js reuses across navigations;
 // refresh it after any change so names, icons, and people stay current.
-function done(path: string): never {
+function done(path: string) {
   revalidatePath("/activities", "layout");
-  redirect(path);
+  return { done: path };
 }
 
 function message(e: unknown) {
@@ -35,7 +35,7 @@ export async function addActivity(_prev: ActivityFormState, form: FormData): Pro
   } catch (e) {
     return { error: message(e) };
   }
-  done(`/activities/${id}`);
+  return done(`/activities/${id}`);
 }
 
 export async function editActivity(id: number, _prev: ActivityFormState, form: FormData): Promise<ActivityFormState> {
@@ -44,7 +44,7 @@ export async function editActivity(id: number, _prev: ActivityFormState, form: F
   } catch (e) {
     return { error: message(e) };
   }
-  done(`/activities/${id}`);
+  return done(`/activities/${id}`);
 }
 
 /** The Doing · Want to · Past switch on an activity's page. */
@@ -60,5 +60,5 @@ export async function changeActivityStatus(id: number, status: string): Promise<
 
 export async function removeActivity(id: number) {
   deleteActivity(getDb(), id);
-  done("/activities");
+  return done("/activities");
 }

@@ -8,6 +8,7 @@ import { SectionLabel } from "@/components/section-label";
 import { StatusSwitch } from "@/components/status-switch";
 import { WithPeople } from "@/components/with-people";
 import { DEFAULT_ACTIVITY_ICON, searchIcons } from "@/lib/activity-icons";
+import { useCloseOnDone } from "@/components/nav-stack";
 import type { ActivityStatus } from "@/lib/activity-status";
 
 type Props = {
@@ -19,6 +20,7 @@ type Props = {
 
 export function ActivityForm({ action, people, submitLabel, defaults }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
+  useCloseOnDone(state);
   const [icon, setIcon] = useState(defaults?.icon ?? DEFAULT_ACTIVITY_ICON);
   const [picking, setPicking] = useState(false);
   const [chosen, setChosen] = useState(defaults?.personIds ?? []);

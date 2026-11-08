@@ -1,5 +1,4 @@
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
-import Link from "next/link";
 import { connection } from "next/server";
 import { ActivityBadge } from "@/components/activity-icon";
 import { Faces } from "@/components/faces";
@@ -8,6 +7,7 @@ import { listActivities } from "@/lib/activities";
 import { getDb } from "@/lib/db";
 import { firstName } from "@/lib/names";
 import { RowLink } from "./row-link";
+import { PanelLink } from "@/components/nav-stack";
 
 const NAMED = 3; // people named on a row before "+ N"
 
@@ -36,23 +36,23 @@ export async function ActivityList() {
             {doing.length > 1 && " · most moments first"}
           </p>
         </div>
-        <Link
+        <PanelLink
           href="/activities/new"
           aria-label="Add activity"
           className="flex items-center gap-1.5 rounded-full border border-line p-2.5 text-ink transition-colors hover:bg-surface desk:px-3.5 desk:py-2 desk:text-[0.8125rem] desk:font-medium"
         >
           <Plus size="1.125rem" className="desk:size-4" />
           <span className="hidden desk:inline">Add activity</span>
-        </Link>
+        </PanelLink>
       </div>
 
       {activities.length === 0 ? (
         <div className="mt-40 text-center desk:mt-24">
           <p className="font-serif text-[1.375rem]">Nothing here yet.</p>
           <p className="mt-1.5 text-[0.8125rem] text-muted">Pickleball, game nights, long walks: add the things you do with people.</p>
-          <Link href="/activities/new" className="mt-2 inline-block text-[0.8125rem] font-medium text-accent underline-offset-4 hover:underline">
+          <PanelLink href="/activities/new" className="mt-2 inline-block text-[0.8125rem] font-medium text-accent underline-offset-4 hover:underline">
             Add your first activity
-          </Link>
+          </PanelLink>
         </div>
       ) : (
         <>

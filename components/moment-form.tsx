@@ -1,7 +1,6 @@
 "use client";
 
 import { X } from "lucide-react";
-import Link from "next/link";
 import { useActionState, useCallback, useRef, useState, useSyncExternalStore } from "react";
 import type { MomentFormState } from "@/app/(app)/journal/actions";
 import { DatePicker } from "@/components/date-picker";
@@ -11,6 +10,7 @@ import { WithActivities } from "@/components/with-activities";
 import { WithPeople } from "@/components/with-people";
 import { localNow, localToday, longDate, momentTime, timeLabel } from "@/lib/dates";
 import { linkedAfterHandEdit, mentionedActivityIds, mentionedIds, syncWith } from "@/lib/mentions";
+import { CloseLink, useCloseOnDone } from "@/components/nav-stack";
 
 type Person = { id: number; name: string; color: number };
 type Activity = { id: number; name: string; icon: string; status?: string };
@@ -34,6 +34,7 @@ const noSubscribe = () => () => {};
 
 export function MomentForm({ action, people, activities, defaults, closeHref }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
+  useCloseOnDone(state);
   // Today comes from the viewer's clock, so it's read in the browser, never at build time.
   const today = useSyncExternalStore(noSubscribe, localToday, () => "");
   const [picked, setPicked] = useState<string | null>(defaults?.date ?? null);
@@ -55,9 +56,9 @@ export function MomentForm({ action, people, activities, defaults, closeHref }: 
   return (
     <form action={formAction} className="flex flex-col">
       <div className="flex items-center justify-between">
-        <Link href={closeHref} aria-label="Close" className="-ml-1.5 rounded-full p-1.5 text-ink transition-colors hover:bg-surface">
+        <CloseLink href={closeHref} aria-label="Close" className="-ml-1.5 rounded-full p-1.5 text-ink transition-colors hover:bg-surface">
           <X size="1.375rem" />
-        </Link>
+        </CloseLink>
         <button disabled={pending || !date} className="rounded-full px-3 py-1.5 text-[0.9375rem] font-medium text-accent transition-colors hover:bg-surface disabled:opacity-50">
           {pending ? "Saving…" : "Save"}
         </button>

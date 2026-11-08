@@ -9,6 +9,7 @@ import { initials } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
 import type { RelationshipType } from "@/lib/relationship-types";
 import { NEW_PERSON_CLOSENESS, TIERS } from "@/lib/tiers";
+import { useCloseOnDone } from "@/components/nav-stack";
 
 type Props = {
   action: (prev: PersonFormState, form: FormData) => Promise<PersonFormState>;
@@ -20,6 +21,7 @@ type Props = {
 
 export function PersonForm({ action, submitLabel, color, types, defaults }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
+  useCloseOnDone(state);
   const [name, setName] = useState(defaults?.name ?? "");
   const [typeId, setTypeId] = useState(defaults?.typeId ?? null);
   // Read from the list each render, so a type renamed or deleted from the dropdown shows that right away.

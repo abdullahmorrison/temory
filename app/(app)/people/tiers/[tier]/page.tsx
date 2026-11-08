@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -11,6 +10,7 @@ import { initials } from "@/lib/names";
 import { listTier } from "@/lib/people";
 import { personColor } from "@/lib/person-colors";
 import { TIERS } from "@/lib/tiers";
+import { PanelLink } from "@/components/nav-stack";
 
 async function TierList({ params }: { params: Promise<{ tier: string }> }) {
   await connection(); // read the database per request, not at build time
@@ -30,7 +30,7 @@ async function TierList({ params }: { params: Promise<{ tier: string }> }) {
           const color = personColor(p.color);
           return (
             <li key={p.id}>
-              <Link
+              <PanelLink
                 href={`/people/${p.id}`}
                 className="-mx-3 flex items-center gap-3.5 rounded-xl px-3 py-2.5 transition-colors hover:bg-surface/70 focus-visible:bg-surface/70 focus-visible:outline-none"
               >
@@ -42,7 +42,7 @@ async function TierList({ params }: { params: Promise<{ tier: string }> }) {
                   <span className="truncate text-[0.9375rem]">{p.name}</span>
                   <span className="text-xs text-muted">{p.lastMoment ? `Last moment ${dayLabel(p.lastMoment)}` : "No moments yet"}</span>
                 </span>
-              </Link>
+              </PanelLink>
             </li>
           );
         })}

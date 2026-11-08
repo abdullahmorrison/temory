@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { createPlace, deletePlace, updatePlace } from "@/lib/places";
 
-export type PlaceFormState = { error?: string };
+// done is where to go once the form has saved.
+export type PlaceFormState = { error?: string; done?: string };
 
 function read(form: FormData) {
   return {
@@ -21,9 +21,9 @@ function read(form: FormData) {
 
 // The map lives in the /places layout on desktop, which Next.js reuses across navigations; refresh it
 // after any change so its pins stay current.
-function done(path: string): never {
+function done(path: string) {
   revalidatePath("/places", "layout");
-  redirect(path);
+  return { done: path };
 }
 
 function message(e: unknown) {
@@ -37,7 +37,7 @@ export async function addPlace(_prev: PlaceFormState, form: FormData): Promise<P
     return { error: message(e) };
   }
   // Back to the whole city, so the pin is seen among the others. Editing does the same.
-  done("/places");
+  return done("/places");
 }
 
 export async function editPlace(id: number, _prev: PlaceFormState, form: FormData): Promise<PlaceFormState> {
@@ -46,10 +46,10 @@ export async function editPlace(id: number, _prev: PlaceFormState, form: FormDat
   } catch (e) {
     return { error: message(e) };
   }
-  done("/places");
+  return done("/places");
 }
 
 export async function removePlace(id: number) {
   deletePlace(getDb(), id);
-  done("/places");
+  return done("/places");
 }

@@ -4,6 +4,7 @@ import { BookOpen, MapPin, PartyPopper, PenLine, Settings, Users } from "lucide-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
+import { LevelLink } from "@/components/nav-stack";
 import { TemoryMark } from "@/components/temory-mark";
 
 const TABS = [
@@ -75,14 +76,14 @@ function TabBarLinks({ path }: { path: Path }) {
       {TABS.map(({ href, label, Icon }) => {
         const on = isActive(path, href);
         return (
-          <Link
+          <LevelLink
             key={href}
             href={href}
             className={`flex flex-1 flex-col items-center gap-1 rounded-lg text-[0.6875rem] transition-colors active:bg-surface outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-0 ${on ? "font-medium text-accent" : "text-muted hover:text-ink"}`}
           >
             <Icon size="1.375rem" />
             {label}
-          </Link>
+          </LevelLink>
         );
       })}
     </>
@@ -93,12 +94,12 @@ function TabBarLinks({ path }: { path: Path }) {
 export function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-6 border-r border-line px-5 py-7 desk:flex">
-      <Link href="/" className="flex items-center gap-2 text-[1.0625rem] font-medium">
+      <LevelLink href="/" className="flex items-center gap-2 text-[1.0625rem] font-medium">
         <span aria-hidden="true">
           <TemoryMark size={24} />
         </span>
         Temory
-      </Link>
+      </LevelLink>
       <LogButton />
       <nav className="flex flex-1 flex-col gap-1">
         <WithPath render={(path) => <SidebarLinks path={path} />} />
@@ -122,12 +123,12 @@ type SidebarLinkProps = { href: string; label: string; Icon: typeof Users; on: b
 
 function SidebarLink({ href, label, Icon, on, className = "" }: SidebarLinkProps) {
   return (
-    <Link
+    <LevelLink
       href={href}
       className={`flex items-center gap-3 rounded-[0.625rem] px-3 py-2.5 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-0 ${on ? "bg-surface font-medium text-ink" : "text-muted hover:bg-surface/60 hover:text-ink"} ${className}`}
     >
       <Icon size="1.25rem" className={on ? "text-accent" : ""} />
       {label}
-    </Link>
+    </LevelLink>
   );
 }

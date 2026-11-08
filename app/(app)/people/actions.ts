@@ -1,12 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { createPerson, deletePerson, moveToTier, updatePerson } from "@/lib/people";
 import { createType, deleteType, updateType } from "@/lib/relationship-types";
 
-export type PersonFormState = { error?: string };
+// done is where to go once the form has saved.
+export type PersonFormState = { error?: string; done?: string };
 
 function read(form: FormData) {
   return {
@@ -19,9 +19,9 @@ function read(form: FormData) {
 
 // The arcs live in the /people layout, which Next.js reuses across navigations; refresh it after
 // any change to people so the arcs and counts stay current.
-function done(path: string): never {
+function done(path: string) {
   revalidatePath("/people", "layout");
-  redirect(path);
+  return { done: path };
 }
 
 function message(e: unknown) {
@@ -34,7 +34,7 @@ export async function addPerson(_prev: PersonFormState, form: FormData): Promise
   } catch (e) {
     return { error: message(e) };
   }
-  done("/people");
+  return done("/people");
 }
 
 export async function editPerson(id: number, _prev: PersonFormState, form: FormData): Promise<PersonFormState> {
@@ -43,12 +43,12 @@ export async function editPerson(id: number, _prev: PersonFormState, form: FormD
   } catch (e) {
     return { error: message(e) };
   }
-  done(`/people/${id}`);
+  return done(`/people/${id}`);
 }
 
 export async function removePerson(id: number) {
   deletePerson(getDb(), id);
-  done("/people");
+  return done("/people");
 }
 
 export type TypeResult = { id?: number; error?: string };

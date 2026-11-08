@@ -12,6 +12,7 @@ import { firstName, initials } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
 import { layoutTiers, tierAt, type LayoutPerson } from "@/lib/tier-layout";
 import { ACQUAINTANCE, PROSPECT, TIERS, tierLabel } from "@/lib/tiers";
+import { PanelLink } from "@/components/nav-stack";
 
 // Everything is placed with transforms, which the browser can move without redoing layout.
 // When the side panel opens or closes, the arcs snap to their new size with no animation.
@@ -156,7 +157,7 @@ export function PeopleTiers({ people: saved }: { people: LayoutPerson[] }) {
                     onCancel={() => setDrag(null)}
                   />
                 ) : (
-                  <Link
+                  <PanelLink
                     key={`more-${b.tier}`}
                     href={`/people/tiers/${b.tier}`}
                     aria-label={`${b.hidden} more, see everyone in ${tierLabel(b.tier)}`}
@@ -172,7 +173,7 @@ export function PeopleTiers({ people: saved }: { people: LayoutPerson[] }) {
                       </span>
                       <span className="text-[0.6875rem] text-muted">more</span>
                     </div>
-                  </Link>
+                  </PanelLink>
                 ),
               )}
             </>
@@ -215,10 +216,10 @@ export function PeopleTiers({ people: saved }: { people: LayoutPerson[] }) {
           <Link href="/settings" aria-label="Settings" className={`${HEADER_BUTTON} desk:hidden`}>
             <Settings size="1.125rem" />
           </Link>
-          <Link href="/people/new" aria-label="Add person" className={`${HEADER_BUTTON} desk:px-4 desk:py-2`}>
+          <PanelLink href="/people/new" aria-label="Add person" className={`${HEADER_BUTTON} desk:px-4 desk:py-2`}>
             <Plus size="1.125rem" />
             <span className="hidden desk:inline">Add person</span>
-          </Link>
+          </PanelLink>
         </div>
       </header>
     </div>
@@ -237,9 +238,9 @@ function EmptyPrompt({ bands, scale }: { bands: { labelY: number }[]; scale: num
     <div style={{ top, height: bottom - top }} className="absolute inset-x-0 flex flex-col items-center justify-center gap-1.5 px-8 text-center">
       <p className="font-serif text-[1.375rem]">No one here yet.</p>
       <p className="text-[0.8125rem] text-muted">Add the people in your life, closest at the bottom.</p>
-      <Link href="/people/new" className="mt-1 text-[0.8125rem] font-medium text-accent underline-offset-4 hover:underline">
+      <PanelLink href="/people/new" className="mt-1 text-[0.8125rem] font-medium text-accent underline-offset-4 hover:underline">
         Add your first person
-      </Link>
+      </PanelLink>
     </div>
   );
 }
@@ -291,7 +292,7 @@ function PersonBubble({ person, x, y, size, pad, delay, selected, lifted, onDrag
   const look = face(person, selected);
   const drag = usePressDrag({ onStart: onDrag, onMove: onDrag, onDrop, onCancel });
   return (
-    <Link
+    <PanelLink
       href={`/people/${person.id}`}
       {...drag}
       style={{ transform: at(x - size / 2 - pad, y - size / 2), width: size + 2 * pad }}
@@ -310,6 +311,6 @@ function PersonBubble({ person, x, y, size, pad, delay, selected, lifted, onDrag
           {firstName(person.name)}
         </span>
       </div>
-    </Link>
+    </PanelLink>
   );
 }
