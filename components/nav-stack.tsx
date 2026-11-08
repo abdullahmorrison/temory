@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { useIsDesk } from "@/components/use-is-desk";
 import { type Arrival, arrive, close as closePlan, level, type Plan } from "@/lib/nav-stack";
 
@@ -85,8 +85,12 @@ export function close(router: Router, href: string, { refresh = false } = {}) {
 /** Once a form's action reports where it's done, closes the form to there, refetching what's there. */
 export function useCloseOnDone(state: { done?: string }) {
   const router = useRouter();
+  // Next keeps a left page alive and re-runs its effects on return, so each result closes the form only once.
+  const handled = useRef(state);
   useEffect(() => {
-    if (state.done) close(router, state.done, { refresh: true });
+    if (!state.done || handled.current === state) return;
+    handled.current = state;
+    close(router, state.done, { refresh: true });
   }, [state, router]);
 }
 
