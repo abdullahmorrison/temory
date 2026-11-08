@@ -23,7 +23,7 @@ async function Timeline({ params }: { params: Promise<{ id: string }> }) {
           <SectionLabel>{month.label}</SectionLabel>
           <div className="flex flex-col gap-1">
             {month.moments.map((m) => (
-              <MomentItem key={m.id} moment={m} about={person.id} href={`/people/${person.id}/moments/${m.id}?from=all`} />
+              <MomentItem key={m.id} moment={m} about={{ person: person.id }} href={`/people/${person.id}/moments/${m.id}?from=all`} />
             ))}
           </div>
         </section>

@@ -16,7 +16,7 @@ function names(people: { name: string }[]) {
   return people.length > NAMED ? `${shown} + ${people.length - NAMED}` : shown;
 }
 
-/** Every activity, the ones done with the most people first. */
+/** Every activity, the ones in the most moments first. */
 export async function ActivityList() {
   await connection(); // read the database per request, not at build time
   const activities = listActivities(getDb());
@@ -27,7 +27,7 @@ export async function ActivityList() {
           <h1 className="text-2xl font-medium desk:text-[1.75rem]">Activities</h1>
           <p className="mt-1 text-[0.8125rem] text-muted">
             {activities.length} {activities.length === 1 ? "activity" : "activities"}
-            {activities.length > 1 && " · most people first"}
+            {activities.length > 1 && " · most moments first"}
           </p>
         </div>
         <Link
@@ -55,7 +55,12 @@ export async function ActivityList() {
               <RowLink href={`/activities/${a.id}`}>
                 <ActivityBadge icon={a.icon} />
                 <span className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="truncate text-[1.0625rem] font-medium">{a.name}</span>
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span className="truncate text-[1.0625rem] font-medium">{a.name}</span>
+                    <span className="shrink-0 text-xs text-muted">
+                      {a.moments} {a.moments === 1 ? "moment" : "moments"}
+                    </span>
+                  </span>
                   {a.people.length > 0 ? (
                     <span className="flex items-center gap-2 text-[0.8125rem] text-muted">
                       <Faces people={a.people} />

@@ -1,0 +1,35 @@
+name: Feature
+description: Suggest something the app should do
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Name it like a commit, e.g. `feat(people): add a graph view of who knows whom`.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What's missing or awkward today, and why it matters. The problem, not just the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: What the app would do about it.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Outcomes you could check off once it's built.
+      value: |
+        - [ ]
+  - type: input
+    id: design
+    attributes:
+      label: Design
+      description: Link to the Figma design. UI isn't built until it's designed there.
+      placeholder: Not designed yet

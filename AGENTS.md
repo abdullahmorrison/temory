@@ -4,6 +4,10 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) and follow it.
 
 Personal, uncommitted instructions can go in `AGENTS.local.md` (ignored by git).
 
+## Design in Figma first
+
+Don't build UI that isn't designed in [Figma](https://www.figma.com/design/uJ4q0ZprJmswMsRah2ud2O). If a feature changes what's on screen and the design doesn't exist yet, design it there first and build only once it's approved.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

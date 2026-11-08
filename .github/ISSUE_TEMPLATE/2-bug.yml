@@ -1,0 +1,32 @@
+name: Bug
+description: Something doesn't work as it should
+title: "fix: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Name it like a commit, e.g. `fix(journal): keep the time when editing a moment`.
+  - type: textarea
+    id: did
+    attributes:
+      label: What you did
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened instead
+      description: Screenshots help.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      description: If it's a display problem.

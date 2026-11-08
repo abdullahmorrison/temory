@@ -5,15 +5,21 @@ import { ActivityBadge } from "@/components/activity-icon";
 import { BackLink } from "@/components/back-link";
 import { EmojiBadge } from "@/components/emoji-badge";
 import { Panel } from "@/components/panel";
+import { MomentItem } from "@/components/moment-item";
 import { SectionLabel } from "@/components/section-label";
+import { getDb } from "@/lib/db";
+import { listMoments } from "@/lib/moments";
 import { initials } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
 import { tierLabel } from "@/lib/tiers";
-import { activityFromParams } from "./data";
+import { activityFromParams, countLabel } from "./data";
+
+const LATEST = 3; // moments shown on the page before "All N moments"
 
 async function Activity({ params }: { params: Promise<{ id: string }> }) {
   const activity = await activityFromParams(params);
   const edit = `/activities/${activity.id}/edit`;
+  const moments = listMoments(getDb(), { activityId: activity.id });
   return (
     <Panel close={{ href: "/activities", label: "Close" }}>
       <div className="flex items-center justify-between desk:-ml-3 desk:pr-10">
@@ -27,9 +33,7 @@ async function Activity({ params }: { params: Promise<{ id: string }> }) {
         <ActivityBadge icon={activity.icon} size="lg" />
         <div className="min-w-0">
           <h1 className="text-[1.75rem] font-medium desk:text-2xl">{activity.name}</h1>
-          <p className="text-[0.8125rem] text-muted">
-            {activity.people.length} {activity.people.length === 1 ? "person" : "people"}
-          </p>
+          <p className="text-[0.8125rem] text-muted">{countLabel(activity.people.length, moments.length)}</p>
         </div>
       </div>
 
@@ -68,6 +72,28 @@ async function Activity({ params }: { params: Promise<{ id: string }> }) {
         ) : (
           <Link href={edit} className="font-serif text-[1.0625rem] text-muted/70 hover:text-muted">
             Add notes about {activity.name}…
+          </Link>
+        )}
+      </section>
+
+      <section className="mt-10 flex flex-col gap-2.5">
+        <div className="flex items-baseline justify-between">
+          <SectionLabel>Journal</SectionLabel>
+          {moments.length > LATEST && (
+            <Link href={`/activities/${activity.id}/moments`} className="text-xs text-accent underline-offset-4 hover:underline">
+              All {moments.length} moments
+            </Link>
+          )}
+        </div>
+        {moments.length ? (
+          <div className="flex flex-col gap-1">
+            {moments.slice(0, LATEST).map((m) => (
+              <MomentItem key={m.id} moment={m} about={{ activity: activity.id }} href={`/activities/${activity.id}/moments/${m.id}`} />
+            ))}
+          </div>
+        ) : (
+          <Link href="/write" className="font-serif text-[1.0625rem] text-muted/70 hover:text-muted">
+            No {activity.name} moments yet. Write one…
           </Link>
         )}
       </section>

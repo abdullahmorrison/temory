@@ -99,6 +99,19 @@ describe("listPeople", () => {
     }
     expect(listPeople(db).map((p) => p.id)).toEqual([zoe.id, abe.id, ben.id]);
   });
+
+  it("breaks a tie by whose latest moment is newest, by day and then time", () => {
+    const db = openDb(":memory:");
+    const [ana, bo, cy] = ["Ana", "Bo", "Cy"].map((name) => createPerson(db, { name }));
+    const log = (personId: number, date: string, time: string | null = null) => {
+      const entry = db.insert(entries).values({ body: "Hi", date, time }).returning().get();
+      db.insert(entryPeople).values({ entryId: entry.id, personId }).run();
+    };
+    log(ana.id, "2026-10-01", "09:00");
+    log(bo.id, "2026-10-20");
+    log(cy.id, "2026-10-20", "19:15");
+    expect(listPeople(db).map((p) => p.id)).toEqual([cy.id, bo.id, ana.id]);
+  });
 });
 
 describe("listTier", () => {

@@ -3,12 +3,12 @@
     .b1 { fill: #c9552f; }
     .b2 { fill: #e08a66; }
     .b3 { fill: #f0c3ad; }
-    .p { fill: #2b2926; }
+    .p { fill: #8a3a1f; }
     @media (prefers-color-scheme: dark) {
       .b1 { fill: #d9673f; }
       .b2 { fill: #9a4a2c; }
       .b3 { fill: #5a3324; }
-      .p { fill: #ece6dc; }
+      .p { fill: #f2b391; }
     }
   </style>
   <path class="b3" d="M4 80 A44 44 0 0 1 92 80 Z" />

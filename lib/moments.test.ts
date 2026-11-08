@@ -82,6 +82,17 @@ describe("activities", () => {
     expect(formDefaults(saved)).toMatchObject({ activityIds: [games.id, hiking.id], activityViaMention: [games.id] });
   });
 
+  it("narrows to one activity's moments, newest first", () => {
+    const { db } = setup();
+    const hiking = createActivity(db, { name: "Hiking", icon: "mountain" });
+    const games = createActivity(db, { name: "Board games", icon: "dices" });
+    createMoment(db, { body: "Hike", date: "2026-10-01", personIds: [], activityIds: [hiking.id] });
+    createMoment(db, { body: "Both", date: "2026-10-20", personIds: [], activityIds: [hiking.id, games.id] });
+    createMoment(db, { body: "Neither", date: "2026-10-22", personIds: [] });
+    expect(listMoments(db, { activityId: hiking.id }).map((m) => m.body)).toEqual(["Both", "Hike"]);
+    expect(listMoments(db, { activityId: games.id }).map((m) => m.body)).toEqual(["Both"]);
+  });
+
   it("rejects unknown activities, replaces them on edit, and drops deleted ones", () => {
     const { db } = setup();
     const hiking = createActivity(db, { name: "Hiking", icon: "mountain" });

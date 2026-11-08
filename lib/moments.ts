@@ -78,15 +78,17 @@ export function deleteMoment(db: Db, id: number) {
 
 /**
  * Every moment, newest first (on a day, those without a time come after the timed ones), with the people and activities in it, and everyone and everything its
- * text mentions (which may not be in it any more). Narrow it to one moment, or to one person's moments.
+ * text mentions (which may not be in it any more). Narrow it to one moment, or to one person's or activity's moments.
  */
-export function listMoments(db: Db, where?: { id?: number; personId?: number }) {
+export function listMoments(db: Db, where?: { id?: number; personId?: number; activityId?: number }) {
   const withPerson = (personId: number) =>
     inArray(entries.id, db.select({ id: entryPeople.entryId }).from(entryPeople).where(eq(entryPeople.personId, personId)));
+  const withActivity = (activityId: number) =>
+    inArray(entries.id, db.select({ id: entryActivities.entryId }).from(entryActivities).where(eq(entryActivities.activityId, activityId)));
   const rows = db
     .select()
     .from(entries)
-    .where(where?.id ? eq(entries.id, where.id) : where?.personId ? withPerson(where.personId) : undefined)
+    .where(where?.id ? eq(entries.id, where.id) : where?.personId ? withPerson(where.personId) : where?.activityId ? withActivity(where.activityId) : undefined)
     .orderBy(desc(entries.date), desc(entries.time), desc(entries.id)) // SQLite sorts empty times last when descending
     .all();
   const links = rows.length

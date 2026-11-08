@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { openDb } from "./db";
 import { createActivity, deleteActivity, getActivity, listActivities, updateActivity } from "./activities";
+import { createMoment } from "./moments";
 import { createPerson, deletePerson, getPerson } from "./people";
 
 describe("createActivity", () => {
@@ -40,14 +41,27 @@ describe("updateActivity", () => {
 });
 
 describe("listActivities", () => {
-  it("puts the activities with the most people first, then by name", () => {
+  it("puts those in the most moments first, then those with the most people, then A to Z, and counts them", () => {
     const db = openDb(":memory:");
     const [sam, priya] = ["Sam", "Priya"].map((name) => createPerson(db, { name }));
-    createActivity(db, { name: "Climbing", icon: "mountain" });
-    createActivity(db, { name: "Board games", icon: "dices", personIds: [sam.id] });
-    createActivity(db, { name: "Pickleball", icon: "pickleball", personIds: [sam.id, priya.id] });
-    createActivity(db, { name: "Bowling", icon: "trophy" });
-    expect(listActivities(db).map((a) => a.name)).toEqual(["Pickleball", "Board games", "Bowling", "Climbing"]);
+    const add = (name: string, personIds: number[] = []) => createActivity(db, { name, icon: "dices", personIds });
+    const pickleball = add("Pickleball", [sam.id]);
+    const games = add("Board games", [sam.id, priya.id]);
+    const climbing = add("Climbing");
+    add("bowling");
+    add("Chess", [priya.id]);
+    const log = (...activityIds: number[]) => createMoment(db, { body: "Hi", date: "2026-10-01", personIds: [], activityIds });
+    log(pickleball.id, games.id);
+    log(pickleball.id);
+    log(games.id);
+    log(climbing.id);
+    expect(listActivities(db).map((a) => [a.name, a.moments])).toEqual([
+      ["Board games", 2],
+      ["Pickleball", 2],
+      ["Climbing", 1],
+      ["Chess", 0],
+      ["bowling", 0],
+    ]);
   });
 
   it("lists people closest first", () => {

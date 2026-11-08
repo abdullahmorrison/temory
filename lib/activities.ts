@@ -1,5 +1,5 @@
-import { asc, eq, inArray } from "drizzle-orm";
-import { activities, activityPeople, people } from "@/db/schema";
+import { asc, count, eq, inArray } from "drizzle-orm";
+import { activities, activityPeople, entryActivities, people } from "@/db/schema";
 import { isActivityIcon } from "@/lib/activity-icons";
 import type { Db } from "@/lib/db";
 
@@ -71,11 +71,19 @@ export function getActivity(db: Db, id: number) {
   return { ...activity, people: peopleFor(db, [id]).get(id) ?? [] };
 }
 
-/** Every activity with its people, the ones done with the most people first. */
+/**
+ * Every activity with its people and how many moments it's in: the ones in the most moments first, then
+ * the ones done with the most people, then A to Z.
+ */
 export function listActivities(db: Db) {
-  const rows = db.select({ id: activities.id, name: activities.name, icon: activities.icon }).from(activities).all();
+  const rows = db
+    .select({ id: activities.id, name: activities.name, icon: activities.icon, moments: count(entryActivities.entryId) })
+    .from(activities)
+    .leftJoin(entryActivities, eq(entryActivities.activityId, activities.id))
+    .groupBy(activities.id)
+    .all();
   const withPeople = peopleFor(db, rows.map((r) => r.id));
   return rows
     .map((r) => ({ ...r, people: withPeople.get(r.id) ?? [] }))
-    .sort((a, b) => b.people.length - a.people.length || a.name.localeCompare(b.name));
+    .sort((a, b) => b.moments - a.moments || b.people.length - a.people.length || a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
 }

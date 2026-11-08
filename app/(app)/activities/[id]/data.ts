@@ -11,3 +11,8 @@ export async function activityFromParams(params: Promise<{ id: string }>) {
   if (!activity) notFound();
   return activity;
 }
+
+/** "4 people · 9 moments" */
+export function countLabel(people: number, moments: number) {
+  return `${people} ${people === 1 ? "person" : "people"} · ${moments} ${moments === 1 ? "moment" : "moments"}`;
+}

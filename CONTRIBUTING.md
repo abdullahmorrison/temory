@@ -17,6 +17,8 @@ Screenshots help.
 
 Open an issue describing the problem you want solved, not just the solution. Saying how you'd use it helps decide whether it fits the app.
 
+Issue titles follow the same [Conventional Commits](https://www.conventionalcommits.org) style as commits, e.g. `feat(people): add a graph view of who knows whom`. The issue forms prefill the type.
+
 ## Making changes
 
 Keep each change focused on one thing. Before committing, run the checks:

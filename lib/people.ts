@@ -58,15 +58,17 @@ export function getPerson(db: Db, id: number) {
   return db.select().from(people).where(eq(people.id, id)).get();
 }
 
-// Those in the most moments first, then A to Z.
-const byMoments = [desc(count(entryPeople.entryId)), sql`${people.name} collate nocase`];
+// Those in the most moments first; on a tie, whoever's latest moment is newest (by day, then time), then A to Z.
+const latest = sql`max(${entries.date} || ' ' || coalesce(${entries.time}, ''))`;
+const byMoments = [desc(count(entryPeople.entryId)), desc(latest), sql`${people.name} collate nocase`];
 
-/** Everyone, those in the most moments first. */
+/** Everyone, those in the most moments first, then the most recent. */
 export function listPeople(db: Db) {
   return db
     .select({ id: people.id, name: people.name, closeness: people.closeness, color: people.color, emoji: people.emoji })
     .from(people)
     .leftJoin(entryPeople, eq(entryPeople.personId, people.id))
+    .leftJoin(entries, eq(entries.id, entryPeople.entryId))
     .groupBy(people.id)
     .orderBy(...byMoments)
     .all();
