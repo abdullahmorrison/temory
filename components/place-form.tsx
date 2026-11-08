@@ -32,7 +32,7 @@ export function PlaceForm({ action, people, submitLabel, defaults }: Props) {
       </div>
 
       <label className="flex flex-col gap-3">
-        <SectionLabel as="span">Call it</SectionLabel>
+        <SectionLabel as="span">Nickname</SectionLabel>
         <input
           name="alias"
           autoComplete="off"
@@ -40,7 +40,7 @@ export function PlaceForm({ action, people, submitLabel, defaults }: Props) {
           placeholder={address?.name ?? "Name"}
           className="border-b border-line bg-transparent pb-1.5 font-serif text-lg outline-none placeholder:text-muted/60 focus:border-ink"
         />
-        <span className="text-xs text-muted">Optional. Shown instead of the address, like &ldquo;Sam&apos;s place&rdquo;.</span>
+        <span className="text-xs text-muted">Optional, like &ldquo;Sam&apos;s place&rdquo;.</span>
       </label>
 
       <div className="flex flex-col gap-3">
