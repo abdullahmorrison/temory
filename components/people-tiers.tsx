@@ -27,7 +27,7 @@ const PEEK = 115;
 
 type Drag = { person: LayoutPerson; size: number; x: number; y: number; tier?: number };
 
-export function PeopleTiers({ people: saved }: { people: LayoutPerson[] }) {
+export function PeopleTiers({ people: saved, past }: { people: LayoutPerson[]; past: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLDivElement>(null);
@@ -209,6 +209,14 @@ export function PeopleTiers({ people: saved }: { people: LayoutPerson[] }) {
           <p className="text-[0.8125rem] text-muted">
             {known} {known === 1 ? "person" : "people"}
             {prospects > 0 && ` · ${prospects} ${prospects === 1 ? "prospect" : "prospects"}`}
+            {past > 0 && (
+              <>
+                {" · "}
+                <PanelLink href="/people/past" className="underline-offset-4 hover:text-ink hover:underline">
+                  {past} past
+                </PanelLink>
+              </>
+            )}
           </p>
         </div>
         <div className="flex gap-2">

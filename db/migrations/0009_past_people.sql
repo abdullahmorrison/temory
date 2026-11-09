@@ -1,0 +1,1 @@
+ALTER TABLE `people` ADD `ended_at` text;

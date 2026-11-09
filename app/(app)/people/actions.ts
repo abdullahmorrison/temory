@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { signedIn } from "@/lib/session";
-import { createPerson, deletePerson, moveToTier, updatePerson } from "@/lib/people";
+import { bringBack, createPerson, deletePerson, endRelationship, moveToTier, updatePerson } from "@/lib/people";
 import { createType, deleteType, updateType } from "@/lib/relationship-types";
 
 // done is where to go once the form has saved.
@@ -93,4 +93,26 @@ export async function movePerson(id: number, closeness: number): Promise<PersonF
   }
   revalidatePath("/people", "layout");
   return {};
+}
+
+/** Ends the relationship on the day it is on your clock (`today`), from the person's Edit page. */
+export async function endRelationshipWith(id: number, today: string): Promise<PersonFormState> {
+  const my = await signedIn();
+  try {
+    endRelationship(my, id, today);
+  } catch (e) {
+    return { error: message(e) };
+  }
+  return done(`/people/${id}`);
+}
+
+/** Brings someone from the past back into a tier. */
+export async function bringPersonBack(id: number, closeness: number): Promise<PersonFormState> {
+  const my = await signedIn();
+  try {
+    bringBack(my, id, closeness);
+  } catch (e) {
+    return { error: message(e) };
+  }
+  return done(`/people/${id}`);
 }

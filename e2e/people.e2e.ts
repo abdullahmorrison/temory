@@ -95,3 +95,36 @@ test("deleting a person keeps their moments", async ({ page }) => {
   await page.goto("/journal");
   await expect(page.getByText("Dinner with").filter({ visible: true })).toBeVisible();
 });
+
+test("ending a relationship moves someone to Past, and Bring back puts them in a tier", async ({ page }) => {
+  await addPerson(page, "Hana");
+  const profile = await openProfile(page, "Hana");
+  await follow(page, "Edit", `${profile}/edit`);
+  await page.getByRole("button", { name: "End relationship" }).click();
+  await expect(page).toHaveURL(profile);
+  await expect(page.getByText(/Past since .+ was Acquaintance/).filter({ visible: true })).toBeVisible();
+
+  // Off the tiers, counted as past, and listed there.
+  await page.goto("/people");
+  await expect(link(page, /Hana/)).toHaveCount(0);
+  await follow(page, "1 past", "/people/past");
+  await expect(link(page, /Hana/)).toBeVisible();
+
+  // Can't be added to a new moment.
+  await page.goto("/write");
+  await page.getByRole("button", { name: "someone" }).click();
+  await page.getByPlaceholder("Search people").fill("Hana");
+  await expect(page.getByText("No one matches")).toBeVisible();
+
+  await page.goto(profile);
+  await page.getByRole("button", { name: "Bring back" }).click();
+  const sheet = page.getByRole("dialog", { name: "Bring Hana back" });
+  await expect(sheet.getByRole("radio", { name: "Acquaintance · was" })).toBeChecked();
+  await sheet.getByText("Close", { exact: true }).click();
+  await sheet.getByRole("button", { name: "Bring back" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(page.getByText("Close", { exact: true }).filter({ visible: true })).toBeVisible();
+  await page.goto("/people");
+  await expect(link(page, /Hana/)).toBeVisible();
+  await expect(page.getByText(/past/)).toHaveCount(0);
+});

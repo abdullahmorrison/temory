@@ -3,7 +3,9 @@ import { editPerson, removePerson } from "@/app/(app)/people/actions";
 import { BackLink } from "@/components/back-link";
 import { ConfirmDelete } from "@/components/confirm-delete";
 import { Panel } from "@/components/panel";
+import { EndRelationship } from "@/components/past-relationship";
 import { PersonForm } from "@/components/person-form";
+import { listMoments } from "@/lib/moments";
 import { signedIn } from "@/lib/session";
 import { listTypes } from "@/lib/relationship-types";
 import { personFromParams } from "../data";
@@ -19,7 +21,8 @@ async function Edit({ params }: { params: Promise<{ id: string }> }) {
       <h1 className="mt-6 mb-10 pr-10 text-2xl font-medium desk:mt-0 desk:mb-9 desk:text-[1.375rem]">Edit {person.name}</h1>
       {/* Keyed by what's saved: Next keeps a left page alive with its state, so a reopened form would hold the values from before. */}
       <PersonForm key={JSON.stringify(defaults)} action={editPerson.bind(null, person.id)} submitLabel="Save" color={person.color} types={listTypes(my)} defaults={defaults} />
-      <div className="mt-14 border-t border-line pt-6">
+      <div className="mt-14 flex flex-col items-start gap-8 border-t border-line pt-6">
+        {!person.endedAt && <EndRelationship person={person} moments={listMoments(my, { personId: person.id }).length} />}
         <ConfirmDelete
           label={`Delete ${person.name}`}
           warning={`Delete ${person.name}? Their moments stay in your journal.`}

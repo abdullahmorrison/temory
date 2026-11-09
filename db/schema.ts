@@ -42,6 +42,8 @@ export const people = sqliteTable("people", {
   color: integer("color").notNull(), // index into lib/person-colors.ts
   typeId: integer("type_id").references(() => relationshipTypes.id, { onDelete: "set null" }),
   notes: text("notes").notNull().default(""),
+  // YYYY-MM-DD on your clock when the relationship ended; empty while it's current. Closeness stays as it was.
+  endedAt: text("ended_at"),
   createdAt: createdAt(),
 });
 
