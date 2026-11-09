@@ -2,12 +2,14 @@
 // writes someone's things goes through signedIn(); proxy.ts only does a quick check that a cookie exists.
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { endSession, sessionUser, startSession, type User } from "@/lib/auth";
 import { getDb, type UserDb } from "@/lib/db";
 import { SESSION_COOKIE } from "@/lib/session-cookie";
 
 /** Who's signed in, if anyone. */
 export async function currentUser(): Promise<User | undefined> {
+  await connection(); // per request, never while prerendering: a session depends on the cookie and the clock
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   return token ? sessionUser(getDb(), token) : undefined;
 }
