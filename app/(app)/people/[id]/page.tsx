@@ -5,7 +5,7 @@ import { EmojiBadge } from "@/components/emoji-badge";
 import { Panel } from "@/components/panel";
 import { MomentItem } from "@/components/moment-item";
 import { SectionLabel } from "@/components/section-label";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { listMoments } from "@/lib/moments";
 import { firstName, initials } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
@@ -15,9 +15,10 @@ import { personFromParams } from "./data";
 const LATEST = 3; // moments shown on the profile before "All N moments"
 
 async function Profile({ params }: { params: Promise<{ id: string }> }) {
+  const my = await signedIn();
   const person = await personFromParams(params);
   const color = personColor(person.color);
-  const moments = listMoments(getDb(), { personId: person.id });
+  const moments = listMoments(my, { personId: person.id });
   return (
     <Panel close={{ href: "/people", label: "Close" }}>
       <div className="flex items-center justify-between desk:-ml-3">

@@ -1,8 +1,28 @@
 import { sql } from "drizzle-orm";
 import { index, integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-// user_id stays empty until there are accounts; it saves a data migration when the app goes public.
 const createdAt = () => text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`);
+
+// Everything below belongs to one account through user_id. Data from before accounts has none until the
+// first account is made, which takes it (lib/auth.ts).
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(), // trimmed and lowercased; the login
+  emailVerifiedAt: text("email_verified_at"), // empty until emails are verified
+  passwordHash: text("password_hash").notNull(), // see lib/password.ts
+  createdAt: createdAt(),
+});
+
+// A signed-in browser. The cookie holds a random token; only its hash is kept, so a leaked database can't sign anyone in.
+export const sessions = sqliteTable("sessions", {
+  tokenHash: text("token_hash").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: text("expires_at").notNull(), // ISO time
+  createdAt: createdAt(),
+});
 
 // What someone is to you, like "Work friend". Presets come with the app; the rest are yours.
 export const relationshipTypes = sqliteTable("relationship_types", {

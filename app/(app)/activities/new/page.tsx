@@ -4,12 +4,13 @@ import { addActivity } from "@/app/(app)/activities/actions";
 import { ActivityForm } from "@/components/activity-form";
 import { BackLink } from "@/components/back-link";
 import { Panel } from "@/components/panel";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { listPeople } from "@/lib/people";
 
 async function Form() {
   await connection(); // read the database per request, not at build time
-  return <ActivityForm action={addActivity} people={listPeople(getDb())} submitLabel="Add activity" />;
+  const my = await signedIn();
+  return <ActivityForm action={addActivity} people={listPeople(my)} submitLabel="Add activity" />;
 }
 
 export default function NewActivityPage() {

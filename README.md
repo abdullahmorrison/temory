@@ -22,6 +22,16 @@ npm run dev
 
 Then open http://localhost:3000.
 
+### Forgotten passwords
+
+There's no reset by email yet. On the server, set a new one from the command line; it also signs that account out everywhere:
+
+```sh
+node scripts/reset-password.mts someone@example.com
+```
+
+In the Docker image, run it with `docker exec -it <container> node scripts/reset-password.mts someone@example.com`.
+
 ## Support
 
 Found a bug or have a question? [Open an issue](https://github.com/abdullahmorrison/personal-crm/issues).

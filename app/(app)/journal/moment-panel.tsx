@@ -4,13 +4,14 @@ import { activitiesForPicker, peopleForPicker } from "@/app/(app)/journal/data";
 import { ConfirmDelete } from "@/components/confirm-delete";
 import { MomentForm } from "@/components/moment-form";
 import { Panel } from "@/components/panel";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { formDefaults, getMoment } from "@/lib/moments";
 
 /** A moment opened from a person's or an activity's page, edited in their panel. Closing or saving goes `back`. */
 export async function MomentPanel({ momentId, back }: { momentId: string; back: string }) {
+  const my = await signedIn();
   const id = Number(momentId);
-  const moment = Number.isInteger(id) ? getMoment(getDb(), id) : undefined;
+  const moment = Number.isInteger(id) ? getMoment(my, id) : undefined;
   if (!moment) notFound();
   const defaults = formDefaults(moment);
   return (

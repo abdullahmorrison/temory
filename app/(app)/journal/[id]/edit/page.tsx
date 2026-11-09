@@ -4,13 +4,14 @@ import { editMoment, removeMoment } from "@/app/(app)/journal/actions";
 import { activitiesForPicker, peopleForPicker } from "@/app/(app)/journal/data";
 import { ConfirmDelete } from "@/components/confirm-delete";
 import { MomentForm } from "@/components/moment-form";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { formDefaults, getMoment } from "@/lib/moments";
 
 async function Edit({ params }: { params: Promise<{ id: string }> }) {
+  const my = await signedIn();
   const people = await peopleForPicker(); // also waits for the request, before reading the moment
   const id = Number((await params).id);
-  const moment = Number.isInteger(id) ? getMoment(getDb(), id) : undefined;
+  const moment = Number.isInteger(id) ? getMoment(my, id) : undefined;
   if (!moment) notFound();
   const defaults = formDefaults(moment);
   return (

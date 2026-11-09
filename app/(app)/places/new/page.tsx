@@ -3,13 +3,14 @@ import { Suspense } from "react";
 import { addPlace } from "@/app/(app)/places/actions";
 import { BackLink } from "@/components/back-link";
 import { PlaceForm } from "@/components/place-form";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { listPeople } from "@/lib/people";
 import { listPlaces, placesCentre } from "@/lib/places";
 
 async function Form() {
   await connection(); // read the database per request, not at build time
-  return <PlaceForm action={addPlace} people={listPeople(getDb())} around={placesCentre(listPlaces(getDb()))} submitLabel="Add place" />;
+  const my = await signedIn();
+  return <PlaceForm action={addPlace} people={listPeople(my)} around={placesCentre(listPlaces(my))} submitLabel="Add place" />;
 }
 
 export default function NewPlacePage() {

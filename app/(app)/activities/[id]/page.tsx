@@ -7,7 +7,7 @@ import { EmojiBadge } from "@/components/emoji-badge";
 import { Panel } from "@/components/panel";
 import { MomentItem } from "@/components/moment-item";
 import { SectionLabel } from "@/components/section-label";
-import { getDb } from "@/lib/db";
+import { signedIn } from "@/lib/session";
 import { listMoments } from "@/lib/moments";
 import { initials } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
@@ -18,9 +18,10 @@ import { ActivityStatusSwitch } from "./status";
 const LATEST = 3; // moments shown on the page before "All N moments"
 
 async function Activity({ params }: { params: Promise<{ id: string }> }) {
+  const my = await signedIn();
   const activity = await activityFromParams(params);
   const edit = `/activities/${activity.id}/edit`;
-  const moments = listMoments(getDb(), { activityId: activity.id });
+  const moments = listMoments(my, { activityId: activity.id });
   return (
     <Panel close={{ href: "/activities", label: "Close" }}>
       <div className="flex items-center justify-between desk:-ml-3 desk:pr-10">

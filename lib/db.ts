@@ -24,3 +24,6 @@ let instance: Db | undefined;
 export function getDb() {
   return (instance ??= openDb(process.env.DATABASE_PATH ?? "data/crm.db"));
 }
+
+/** The database as one account sees it. Everything that reads or writes someone's things takes this. */
+export type UserDb = { db: Db; userId: number };
