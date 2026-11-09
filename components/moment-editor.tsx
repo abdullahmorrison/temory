@@ -114,6 +114,8 @@ export function MomentEditor({ people, activities, defaultValue = "", autoFocus,
     editorProps: {
       attributes: {
         class: "min-h-48 font-serif text-[1.1875rem] leading-8 outline-none",
+        role: "textbox",
+        "aria-multiline": "true",
         "aria-label": "What happened?",
       },
     },

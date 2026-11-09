@@ -58,13 +58,13 @@ export async function ActivityList() {
         <>
           <Rows activities={doing} className="mt-6" />
           {want.length > 0 && (
-            <section className="mt-9">
+            <section aria-label="Want to" className="mt-9">
               <SectionLabel>Want to · {want.length}</SectionLabel>
               <Rows activities={want} className="mt-3" />
             </section>
           )}
           {past.length > 0 && (
-            <details className="group mt-6 border-t border-line pt-5">
+            <details aria-label="Past" className="group mt-6 border-t border-line pt-5">
               <summary className="flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden">
                 <SectionLabel as="span">Past · {past.length}</SectionLabel>
                 <ChevronDown size="1.125rem" className="text-muted transition-transform group-open:rotate-180" />
