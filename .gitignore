@@ -22,3 +22,7 @@ npm-debug.log*
 
 # local database
 /data
+
+# end-to-end tests
+/e2e/.data
+/test-results
