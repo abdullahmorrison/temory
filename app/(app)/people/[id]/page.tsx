@@ -3,9 +3,11 @@ import { Suspense } from "react";
 import { BackLink } from "@/components/back-link";
 import { EmojiBadge } from "@/components/emoji-badge";
 import { Panel } from "@/components/panel";
+import { BringBack, EndRelationship } from "@/components/past-relationship";
 import { MomentItem } from "@/components/moment-item";
 import { SectionLabel } from "@/components/section-label";
 import { signedIn } from "@/lib/session";
+import { dayLabel } from "@/lib/dates";
 import { listMoments } from "@/lib/moments";
 import { firstName, initials } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
@@ -22,7 +24,7 @@ async function Profile({ params }: { params: Promise<{ id: string }> }) {
   return (
     <Panel close={{ href: "/people", label: "Close" }}>
       <div className="flex items-center justify-between desk:-ml-3">
-        <BackLink href="/people" label="Back to people" />
+        {person.endedAt ? <BackLink href="/people/past" label="Back to past" /> : <BackLink href="/people" label="Back to people" />}
         <Link href={`/people/${person.id}/edit`} className="rounded-full px-3 py-1 text-sm text-muted transition-colors hover:bg-surface hover:text-ink">
           Edit
         </Link>
@@ -30,14 +32,17 @@ async function Profile({ params }: { params: Promise<{ id: string }> }) {
 
       <div className="mt-6 flex flex-col items-center gap-1.5 text-center desk:flex-row desk:gap-4 desk:text-left">
         <span
-          className={`relative flex size-22 shrink-0 items-center justify-center rounded-full font-serif text-[2rem] shadow-(--shadow-avatar) ring-2 ring-halo ${color.fill} ${color.ink}`}
+          className={`relative flex size-22 shrink-0 items-center justify-center rounded-full font-serif text-[2rem] shadow-(--shadow-avatar) ring-2 ring-halo ${color.fill} ${color.ink} ${person.endedAt ? "opacity-60" : ""}`}
         >
           {initials(person.name)}
           <EmojiBadge emoji={person.emoji} />
         </span>
         <div>
           <h1 className="mt-2 text-[1.75rem] font-medium desk:mt-0 desk:text-2xl">{person.name}</h1>
-          <p className="text-[0.8125rem] text-muted">{tierLabel(person.closeness)}</p>
+          <p className="text-[0.8125rem] text-muted">
+            {person.endedAt ? `Past since ${dayLabel(person.endedAt)}  ·  was ${tierLabel(person.closeness)}` : tierLabel(person.closeness)}
+          </p>
+          {person.endedAt && <BringBack person={person} moments={moments.length} />}
         </div>
       </div>
 
@@ -73,6 +78,8 @@ async function Profile({ params }: { params: Promise<{ id: string }> }) {
           </Link>
         )}
       </section>
+
+      {!person.endedAt && <EndRelationship person={person} moments={moments.length} />}
     </Panel>
   );
 }

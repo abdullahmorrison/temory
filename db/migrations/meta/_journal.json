@@ -64,6 +64,13 @@
       "when": 1794180595806,
       "tag": "0008_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1794184516124,
+      "tag": "0009_past_people",
+      "breakpoints": true
     }
   ]
 }

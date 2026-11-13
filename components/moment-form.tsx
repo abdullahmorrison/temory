@@ -12,7 +12,7 @@ import { localNow, localToday, longDate, momentTime, timeLabel } from "@/lib/dat
 import { linkedAfterHandEdit, mentionedActivityIds, mentionedIds, syncWith } from "@/lib/mentions";
 import { CloseLink, useCloseOnDone } from "@/components/nav-stack";
 
-type Person = { id: number; name: string; color: number };
+type Person = { id: number; name: string; color: number; endedAt?: string | null };
 type Activity = { id: number; name: string; icon: string; status?: string };
 
 type Props = {

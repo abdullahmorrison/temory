@@ -5,11 +5,12 @@ import { useState } from "react";
 import { firstName } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
 
-type Person = { id: number; name: string; color: number };
+type Person = { id: number; name: string; color: number; endedAt?: string | null };
 
 /**
  * "with Sam Priya + someone": chips for who was there, and a search to add more. Someone there only
  * because of a mention (`linked`) is dashed, and tapping locks them in; tapping anyone else removes them.
+ * Past relationships can't be added, but stay where they already are.
  */
 export function WithPeople({
   people,
@@ -34,7 +35,7 @@ export function WithPeople({
   const [query, setQuery] = useState("");
   const byId = new Map(people.map((p) => [p.id, p]));
   const matches = people
-    .filter((p) => !chosen.includes(p.id) && p.name.toLowerCase().includes(query.trim().toLowerCase()))
+    .filter((p) => !p.endedAt && !chosen.includes(p.id) && p.name.toLowerCase().includes(query.trim().toLowerCase()))
     .slice(0, 6);
   const add = (id: number) => {
     onChange([...chosen, id]);

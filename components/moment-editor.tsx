@@ -15,7 +15,7 @@ import { fromDoc, mentionMatches, toDoc } from "@/lib/mentions";
 import { firstName } from "@/lib/names";
 import { personColor } from "@/lib/person-colors";
 
-type Person = { id: number; name: string; color: number };
+type Person = { id: number; name: string; color: number; endedAt?: string | null };
 type Activity = { id: number; name: string; icon: string };
 // One menu at a time: the people from @, or the activities from /.
 type Option = ({ kind: "person" } & Person) | ({ kind: "activity" } & Activity);
@@ -106,7 +106,8 @@ export function MomentEditor({ people, activities, defaultValue = "", autoFocus,
           return ["span", { class: `font-medium ${p ? personColor(p.color).ink : ""}`, "data-person": node.attrs.id }, firstName(p?.name ?? node.attrs.label)];
         },
         suggestions: [
-          suggestion("@", (q) => mentionMatches(latest.current.people, q).map((p) => ({ kind: "person" as const, ...p }))),
+          // Past relationships keep their name and color in old moments, but can't be newly mentioned.
+          suggestion("@", (q) => mentionMatches(latest.current.people.filter((p) => !p.endedAt), q).map((p) => ({ kind: "person" as const, ...p }))),
           suggestion("/", (q) => mentionMatches(latest.current.activities, q).map((a) => ({ kind: "activity" as const, ...a }))),
         ],
       }),
