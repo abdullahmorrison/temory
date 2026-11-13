@@ -99,8 +99,14 @@ test("deleting a person keeps their moments", async ({ page }) => {
 test("ending a relationship moves someone to Past, and Bring back puts them in a tier", async ({ page }) => {
   await addPerson(page, "Hana");
   const profile = await openProfile(page, "Hana");
-  await follow(page, "Edit", `${profile}/edit`);
+  // It asks first; Cancel changes nothing.
   await page.getByRole("button", { name: "End relationship" }).click();
+  const confirm = page.getByRole("dialog", { name: "End things with Hana?" });
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toBeHidden();
+  await page.getByRole("button", { name: "End relationship" }).click();
+  await confirm.getByRole("button", { name: "End relationship" }).click();
+  await expect(confirm).toBeHidden();
   await expect(page).toHaveURL(profile);
   await expect(page.getByText(/Past since .+ was Acquaintance/).filter({ visible: true })).toBeVisible();
 

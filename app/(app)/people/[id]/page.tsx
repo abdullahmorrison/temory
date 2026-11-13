@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { BackLink } from "@/components/back-link";
 import { EmojiBadge } from "@/components/emoji-badge";
 import { Panel } from "@/components/panel";
-import { BringBack } from "@/components/past-relationship";
+import { BringBack, EndRelationship } from "@/components/past-relationship";
 import { MomentItem } from "@/components/moment-item";
 import { SectionLabel } from "@/components/section-label";
 import { signedIn } from "@/lib/session";
@@ -78,6 +78,8 @@ async function Profile({ params }: { params: Promise<{ id: string }> }) {
           </Link>
         )}
       </section>
+
+      {!person.endedAt && <EndRelationship person={person} moments={moments.length} />}
     </Panel>
   );
 }
